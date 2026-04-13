@@ -1,4 +1,7 @@
+'use client'
+
 import { Button } from "./ui/button";
+import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 import { clsx } from "clsx";
 import { useTypewriter } from "react-simple-typewriter";
@@ -104,10 +107,13 @@ export default function HeroSection() {
                   : "bg-gradient-to-r from-blue-500 via-purple-500 to-red-500"
               )} style={{ backfaceVisibility: 'hidden' }}>
                 <div className="relative w-full h-full">
-                  <img
+                  <Image
                     src="/NamitDark.webp"
                     alt="Namit Dark"
-                    className="w-full h-full object-cover rounded-full"
+                    fill
+                    priority
+                    sizes="(max-width: 640px) 192px, (max-width: 768px) 224px, 256px"
+                    className="object-cover rounded-full"
                   />
                   {/* Subtle shine effect */}
                   {/* <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/20 to-transparent opacity-0 transition-opacity duration-500"></div> */}
@@ -125,10 +131,13 @@ export default function HeroSection() {
                 transform: 'rotateY(180deg)'
               }}>
                 <div className="relative w-full h-full">
-                  <img
+                  <Image
                     src="/Namit.webp"
                     alt="Namit Real Photo"
-                    className="w-full h-full object-cover rounded-full"
+                    fill
+                    priority
+                    sizes="(max-width: 640px) 192px, (max-width: 768px) 224px, 256px"
+                    className="object-cover rounded-full"
                   />
                   {/* Subtle shine effect */}
                   {/* <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/20 to-transparent opacity-0 transition-opacity duration-500"></div> */}
@@ -254,10 +263,13 @@ export default function HeroSection() {
                 style={{ backfaceVisibility: 'hidden' }}
               >
                 <div className="relative w-full h-full">
-                  <img
+                  <Image
                     src="/NamitDark.webp"
                     alt="Namit Dark"
-                    className="w-full h-full object-cover rounded-xl"
+                    fill
+                    priority
+                    sizes="(max-width: 1280px) 240px, 350px"
+                    className="object-cover rounded-xl"
                   />
                   {/* Subtle shine effect */}
                   {/* <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/30 to-transparent opacity-0 transition-opacity duration-500 hover:opacity-100"></div> */}
@@ -278,10 +290,13 @@ export default function HeroSection() {
                 }}
               >
                 <div className="relative w-full h-full">
-                  <img
+                  <Image
                     src="/Namit.webp"
                     alt="Namit Real Photo"
-                    className="w-full h-full object-cover rounded-xl"
+                    fill
+                    priority
+                    sizes="(max-width: 1280px) 240px, 350px"
+                    className="object-cover rounded-xl"
                   />
                   {/* Subtle shine effect */}
                   {/* <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/30 to-transparent opacity-0 transition-opacity duration-500 hover:opacity-100"></div> */}

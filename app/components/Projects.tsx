@@ -1,7 +1,9 @@
-import { Code, Palette, Database, } from "lucide-react";
-import ProjectCard from './ProjectCard.tsx'
+'use client'
+
+import { Code, Palette, Database } from "lucide-react";
+import ProjectCard from './ProjectCard'
 import clsx from 'clsx'
-import { useTheme } from "./ThemeContext.tsx";
+import { useTheme } from "./ThemeContext";
 
 const realLifeProjects = [
   {

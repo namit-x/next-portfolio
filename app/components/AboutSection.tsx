@@ -1,3 +1,5 @@
+'use client'
+
 import { Code, Mic, Coffee, Download, LaptopMinimal } from "lucide-react";
 import { Button } from "./ui/button";
 import { useTheme } from "./ThemeContext";

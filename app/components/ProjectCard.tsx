@@ -1,4 +1,7 @@
+'use client'
+
 // import { useState } from 'react';
+import Image from 'next/image';
 import { ExternalLink } from 'lucide-react';
 
 const GithubIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -17,11 +20,12 @@ const ProjectCard = ({ project, }: { project: any; isRealLife?: boolean }) => {
 
       {/* Project Image */}
       <div className="relative h-48 sm:h-56 overflow-hidden">
-        <img
+        <Image
           src={project.image}
           alt={`${project.title} preview`}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-          loading="lazy"
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          className="object-cover transition-transform duration-700 group-hover:scale-110"
         />
 
         {/* Project Title Overlay */}

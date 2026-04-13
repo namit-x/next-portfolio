@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useRef } from "react"
 import HeroSection from "./HeroSection"
 import AboutSection from "./AboutSection"
