@@ -1,0 +1,243 @@
+/*
+ * V2 Theme System
+ * Tokens use bare HSL components so Tailwind v4's
+ *   --color-background: hsl(var(--background))
+ * resolves correctly within any [data-theme] wrapper.
+ *
+ * Set data-theme="light" or data-theme="dark" on a container element.
+ * CSS custom properties cascade, so all descendant components inherit the tokens.
+ */
+
+[data-theme="light"] {
+  --background: 240 10% 97%;
+  --foreground: 240 10% 5%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 5%;
+
+  --primary: 252 100% 67%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 240 5% 96%;
+  --secondary-foreground: 240 10% 5%;
+
+  --muted: 240 5% 92%;
+  --muted-foreground: 240 4% 45%;
+
+  --accent: 252 100% 67%;
+  --accent-foreground: 0 0% 100%;
+
+  --border: 240 6% 90%;
+  --ring: 252 100% 67%;
+
+  --radius: 0.5rem;
+
+  /* V2-specific semantic tokens */
+  --hero-glow: 252 100% 67% / 0.06;
+  --hero-glow-mid: 252 100% 67% / 0.03;
+}
+
+[data-theme="dark"] {
+  --background: 240 10% 4%;
+  --foreground: 0 0% 95%;
+
+  --card: 240 10% 7%;
+  --card-foreground: 0 0% 95%;
+
+  --primary: 252 100% 67%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 240 4% 14%;
+  --secondary-foreground: 0 0% 95%;
+
+  --muted: 240 4% 14%;
+  --muted-foreground: 240 5% 65%;
+
+  --accent: 252 100% 67%;
+  --accent-foreground: 0 0% 100%;
+
+  --border: 240 4% 16%;
+  --ring: 252 100% 67%;
+
+  --radius: 0.5rem;
+
+  /* V2-specific semantic tokens */
+  --hero-glow: 252 100% 67% / 0.1;
+  --hero-glow-mid: 252 100% 67% / 0.04;
+}
+
+/* ── Base ──────────────────────────────────────────────────────────── */
+
+.v2-root {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  min-height: 100dvh;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* ── Hero section ──────────────────────────────────────────────────── */
+
+.v2-hero {
+  position: relative;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 0 8% 9%;
+}
+
+/* Dark: subtle radial glow anchored to lower-left, near the name */
+[data-theme="dark"] .v2-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 55% 45% at 10% 85%,
+    hsl(var(--primary) / 0.09),
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+/* Portrait image — right side, light only */
+.v2-hero-img-wrap {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 42%;
+  height: 90%;
+  transition: opacity 0.4s;
+}
+
+/* Fade the left edge so image blends into the background */
+[data-theme="light"] .v2-hero-img-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    hsl(var(--background)) 0%,
+    transparent 28%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+[data-theme="dark"] .v2-hero-img-wrap {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Mobile: hide image entirely */
+@media (max-width: 640px) {
+  .v2-hero-img-wrap { display: none; }
+  .v2-hero { padding: 0 7% 12%; }
+}
+
+/* Content column */
+.v2-hero-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 60%;
+}
+
+@media (max-width: 640px) {
+  .v2-hero-content { max-width: 100%; }
+}
+
+/* Role label */
+.v2-hero-label {
+  font-size: 0.875rem;
+  color: hsl(var(--primary));
+  font-family: monospace;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+/* Name — the dominant element */
+.v2-hero-name {
+  font-size: clamp(4rem, 12vw, 10rem);
+  font-weight: 900;
+  line-height: 0.88;
+  letter-spacing: -0.035em;
+  margin: 0;
+  padding: 0;
+}
+
+[data-theme="light"] .v2-hero-name {
+  color: hsl(var(--foreground));
+}
+
+[data-theme="dark"] .v2-hero-name {
+  background: linear-gradient(
+    130deg,
+    hsl(var(--foreground)) 0%,
+    hsl(var(--primary)) 60%,
+    hsl(var(--foreground) / 0.7) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 48px hsl(var(--primary) / 0.22));
+}
+
+/* Tagline */
+.v2-hero-sub {
+  font-size: 1rem;
+  color: hsl(var(--muted-foreground));
+  margin: 0.5rem 0 0;
+  max-width: 28rem;
+  line-height: 1.6;
+}
+
+/* Scroll cue — vertical text + animated line, bottom-right */
+.v2-scroll-cue {
+  position: absolute;
+  right: 8%;
+  bottom: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  z-index: 2;
+}
+
+.v2-scroll-cue span {
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+  font-family: monospace;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  writing-mode: vertical-rl;
+}
+
+.v2-scroll-line {
+  width: 1px;
+  height: 3.5rem;
+  background: linear-gradient(
+    to bottom,
+    hsl(var(--muted-foreground) / 0.5),
+    transparent
+  );
+  animation: v2-line-drop 1.6s ease-in-out infinite;
+  transform-origin: top;
+}
+
+/* ── Keyframes ─────────────────────────────────────────────────────── */
+
+@keyframes v2-bounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(6px); }
+}
+
+@keyframes v2-line-drop {
+  0%   { transform: scaleY(0); opacity: 0; transform-origin: top; }
+  40%  { transform: scaleY(1); opacity: 1; transform-origin: top; }
+  60%  { transform: scaleY(1); opacity: 1; transform-origin: bottom; }
+  100% { transform: scaleY(0); opacity: 0; transform-origin: bottom; }
+}
