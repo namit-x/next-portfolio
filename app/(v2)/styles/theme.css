@@ -35,6 +35,10 @@
   /* V2-specific semantic tokens */
   --hero-glow: 252 100% 67% / 0.06;
   --hero-glow-mid: 252 100% 67% / 0.03;
+
+  /* Brand gradient endpoints (used by .v2-text-grad) */
+  --brand-grad-from: 224 100% 20%; /* ~#001f65 — deep navy */
+  --brand-grad-to:   220 98% 70%;  /* ~#6895fd — soft blue */
 }
 
 [data-theme="dark"] {
@@ -64,6 +68,10 @@
   /* V2-specific semantic tokens */
   --hero-glow: 252 100% 67% / 0.1;
   --hero-glow-mid: 252 100% 67% / 0.04;
+
+  /* Brand gradient — inverted for contrast on dark bg */
+  --brand-grad-from: 220 98% 70%;
+  --brand-grad-to:   224 100% 35%;
 }
 
 /* ── Scaling system ────────────────────────────────────────────────── */
@@ -123,6 +131,19 @@ html {
   margin-inline: auto;
   padding-inline: var(--container-pad);
   width: 100%;
+}
+
+/* Utility: brand-gradient text (theme-aware, defined once) */
+.v2-text-grad {
+  background-image: linear-gradient(
+    180deg,
+    hsl(var(--brand-grad-from)),
+    hsl(var(--brand-grad-to))
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
 }
 
 /* ── Hero section ──────────────────────────────────────────────────── */

@@ -1,72 +1,48 @@
+import Image from 'next/image'
+
 const HeroSection = () => {
   return (
     <section className="relative flex min-h-screen w-full items-center justify-center">
+      <div className="v2-container py-12">
+        {/* Main heading */}
+        <h1
+          className="v2-text-grad text-center font-black tracking-tighter"
+          style={{ fontSize: 'var(--text-hero)', lineHeight: 1.1, letterSpacing: '-0.03em' }}
+        >
+          NAMIT RANA
+        </h1>
 
-      <div className="relative mx-auto w-full max-w-7xl px-4 py-12 md:px-6 lg:px-8">
-
-        {/* Main heading - NAMIT RANA */}
-        <div className="text-center">
-          <h1
-            className="font-black tracking-tighter"
-            style={{
-              fontSize: 'clamp(4rem, 15vw, 11rem)',
-              background: 'linear-gradient(180deg, #001f65, #6895fd)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              letterSpacing: '-0.03em',
-              lineHeight: '1.1',
-            }}
-          >
-            NAMIT RANA
-          </h1>
-        </div>
-
-        {/* Image section - no circle */}
+        {/* Portrait */}
         <div className="mt-8 flex justify-center md:mt-12">
-          <img
+          <Image
             src="/Namit.webp"
             alt="Namit Rana"
+            width={600}
+            height={800}
+            priority
+            sizes="(min-width: 1024px) 24rem, (min-width: 768px) 20rem, 16rem"
             className="h-64 w-auto object-contain md:h-80 lg:h-96"
           />
         </div>
 
-        {/* DEVELOPER and FREELANCER tags */}
+        {/* Role tags */}
         <div className="mt-8 flex flex-col items-center justify-center gap-4 md:mt-12 md:flex-row md:gap-12 lg:gap-16">
-
-          {/* DEVELOPER tag */}
-          <div>
-            <span
-              className="text-sm font-bold uppercase tracking-[0.3em] md:text-base lg:text-lg"
-              style={{
-                background: 'linear-gradient(180deg, #001f65, #6895fd)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}
-            >
-              D E V E L O P E R
-            </span>
-          </div>
-
-          {/* FREELANCER tag */}
-          <div>
-            <span
-              className="text-sm font-bold uppercase tracking-[0.3em] md:text-base lg:text-lg"
-              style={{
-                background: 'linear-gradient(180deg, #001f65, #6895fd)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}
-            >
-              F R E E L A N C E R
-            </span>
-          </div>
+          <span
+            className="v2-text-grad font-bold uppercase"
+            style={{ fontSize: 'var(--text-base)', letterSpacing: '0.3em' }}
+          >
+            D E V E L O P E R
+          </span>
+          <span
+            className="v2-text-grad font-bold uppercase"
+            style={{ fontSize: 'var(--text-base)', letterSpacing: '0.3em' }}
+          >
+            F R E E L A N C E R
+          </span>
         </div>
       </div>
     </section>
-  );
-};
+  )
+}
 
-export default HeroSection;
+export default HeroSection
