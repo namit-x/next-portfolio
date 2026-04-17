@@ -66,6 +66,46 @@
   --hero-glow-mid: 252 100% 67% / 0.04;
 }
 
+/* ── Scaling system ────────────────────────────────────────────────── */
+/*
+ * Typography: fluid clamp (rem + vw), 5 steps.
+ * Spacing:    8px grid in rem — Tailwind's default scale already
+ *             follows this (gap-2 = 0.5rem = 8px), so these tokens
+ *             are for CSS/inline use where Tailwind isn't available.
+ * Container:  global max-width + fluid horizontal pad.
+ *
+ * Put on :root so they cascade everywhere regardless of data-theme.
+ */
+
+:root {
+  /* ── Typography scale ─────────────────────────────── */
+  --text-sm:   clamp(0.75rem,  0.7rem  + 0.25vw, 0.875rem); /* 12 → 14 */
+  --text-base: clamp(0.875rem, 0.825rem + 0.25vw, 1rem);    /* 14 → 16 */
+  --text-lg:   clamp(1rem,     0.925rem + 0.375vw, 1.25rem); /* 16 → 20 */
+  --text-xl:   clamp(1.25rem,  1.1rem  + 0.75vw,  1.75rem); /* 20 → 28 */
+  --text-hero: clamp(3rem,     1.5rem  + 6.5vw,   8rem);    /* 48 → 128 */
+
+  /* ── Spacing scale (8px grid) ─────────────────────── */
+  --space-1:  0.25rem;  /*  4 */
+  --space-2:  0.5rem;   /*  8 */
+  --space-3:  0.75rem;  /* 12 */
+  --space-4:  1rem;     /* 16 */
+  --space-6:  1.5rem;   /* 24 */
+  --space-8:  2rem;     /* 32 */
+  --space-10: 2.5rem;   /* 40 */
+  --space-12: 3rem;     /* 48 */
+  --space-16: 4rem;     /* 64 */
+
+  /* ── Container ────────────────────────────────────── */
+  --container-max: 75rem; /* 1200px */
+  --container-pad: clamp(1rem, 0.5rem + 2vw, 2.5rem); /* 16 → 40 */
+}
+
+/* Explicit base so scaling is consistent across devices and DPI */
+html {
+  font-size: 100%; /* = 16px — prevents user-agent variance */
+}
+
 /* ── Base ──────────────────────────────────────────────────────────── */
 
 .v2-root {
@@ -73,6 +113,16 @@
   color: hsl(var(--foreground));
   min-height: 100dvh;
   transition: background-color 0.3s, color 0.3s;
+  font-size: var(--text-base);
+  line-height: 1.6;
+}
+
+/* Utility: centered container */
+.v2-container {
+  max-width: var(--container-max);
+  margin-inline: auto;
+  padding-inline: var(--container-pad);
+  width: 100%;
 }
 
 /* ── Hero section ──────────────────────────────────────────────────── */

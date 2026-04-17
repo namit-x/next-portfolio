@@ -1,45 +1,68 @@
-// import namitCutout from "@/assets/namit.png";
-
 const HeroSection = () => {
   return (
-    <section className="relative h-screen w-full overflow-hidden bg-background">
-      {/* Subtle texture dots */}
-      <div className="absolute inset-0 opacity-[0.03]" style={{
-        backgroundImage: 'radial-gradient(circle, hsl(var(--foreground)) 1px, transparent 1px)',
-        backgroundSize: '24px 24px',
-      }} />
+    <section className="relative flex min-h-screen w-full items-center justify-center bg-white">
 
-      {/* Main content */}
-      <div className="relative z-10 flex h-full w-full">
-        {/* Left: Typography block */}
-        <div className="flex flex-1 flex-col justify-center pl-[6vw] md:pl-[8vw] lg:pl-[10vw]">
-          {/* Subtitle above name */}
-          <p className="text-hero-subtitle mb-4 font-body text-sm uppercase tracking-[0.35em] md:text-base">
-            Developer & Freelancer
-          </p>
+      <div className="relative mx-auto w-full max-w-7xl px-4 py-12 md:px-6 lg:px-8">
 
-          {/* The name — massive, dominant */}
-          <h1 className="hero-name-gradient hero-name-glow font-display text-hero-name leading-[0.85] font-extrabold"
+        {/* Main heading - NAMIT RANA */}
+        <div className="text-center">
+          <h1
+            className="font-black tracking-tighter"
             style={{
-              fontSize: 'clamp(4rem, 12vw, 14rem)',
+              fontSize: 'clamp(4rem, 15vw, 11rem)',
+              background: 'linear-gradient(180deg, #001f65, #6895fd)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              letterSpacing: '-0.03em',
+              lineHeight: '1.1',
             }}
           >
-            NAMIT
-            <br />
-            RANA
+            NAMIT RANA
           </h1>
-
-          {/* Minimal accent line */}
-          <div className="mt-8 h-1 w-16 rounded-full bg-primary" />
         </div>
 
-        {/* Right: Photo (light mode only) */}
-        <div className="hidden lg:flex items-end justify-end pr-[4vw] pb-0 w-[45%]">
+        {/* Image section - no circle */}
+        <div className="mt-8 flex justify-center md:mt-12">
           <img
             src="/Namit.webp"
             alt="Namit Rana"
-            className="hero-image-fade h-[85vh] w-auto max-w-none object-contain object-bottom dark:opacity-10 dark:blur-sm transition-all duration-500"
+            className="h-64 w-auto object-contain md:h-80 lg:h-96"
           />
+        </div>
+
+        {/* DEVELOPER and FREELANCER tags */}
+        <div className="mt-8 flex flex-col items-center justify-center gap-4 md:mt-12 md:flex-row md:gap-12 lg:gap-16">
+
+          {/* DEVELOPER tag */}
+          <div>
+            <span
+              className="text-sm font-bold uppercase tracking-[0.3em] md:text-base lg:text-lg"
+              style={{
+                background: 'linear-gradient(180deg, #001f65, #6895fd)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >
+              D E V E L O P E R
+            </span>
+          </div>
+
+          {/* FREELANCER tag */}
+          <div>
+            <span
+              className="text-sm font-bold uppercase tracking-[0.3em] md:text-base lg:text-lg"
+              style={{
+                background: 'linear-gradient(180deg, #001f65, #6895fd)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >
+              F R E E L A N C E R
+            </span>
+          </div>
         </div>
       </div>
     </section>
