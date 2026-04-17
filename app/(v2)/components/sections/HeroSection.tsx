@@ -1,6 +1,6 @@
 const HeroSection = () => {
   return (
-    <section className="relative flex min-h-screen w-full items-center justify-center bg-white">
+    <section className="relative flex min-h-screen w-full items-center justify-center">
 
       <div className="relative mx-auto w-full max-w-7xl px-4 py-12 md:px-6 lg:px-8">
 

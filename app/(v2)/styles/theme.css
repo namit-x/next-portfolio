@@ -109,10 +109,10 @@ html {
 /* ── Base ──────────────────────────────────────────────────────────── */
 
 .v2-root {
-  background-color: hsl(var(--background));
+  background-color: transparent;
   color: hsl(var(--foreground));
   min-height: 100dvh;
-  transition: background-color 0.3s, color 0.3s;
+  transition: color 0.3s;
   font-size: var(--text-base);
   line-height: 1.6;
 }
