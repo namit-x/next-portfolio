@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Namit Rana — Developer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── Tokens ───────────────────────────────────────────────── */
+    :root {
+      --accent:      oklch(0.72 0.17 195);
+      --accent-dim:  oklch(0.72 0.17 195 / 0.12);
+      --accent-line: oklch(0.72 0.17 195 / 0.35);
+    }
+    [data-theme="dark"] {
+      --bg:          oklch(0.09 0.01 260);
+      --bg-2:        oklch(0.12 0.012 260);
+      --surface:     oklch(0.15 0.012 260);
+      --border:      oklch(0.22 0.01 260);
+      --fg:          oklch(0.96 0.005 80);
+      --fg-2:        oklch(0.65 0.008 260);
+      --fg-3:        oklch(0.40 0.008 260);
+      --dot-color:   oklch(0.22 0.01 260);
+    }
+    [data-theme="light"] {
+      --bg:          oklch(0.97 0.006 80);
+      --bg-2:        oklch(0.93 0.006 80);
+      --surface:     oklch(0.90 0.006 80);
+      --border:      oklch(0.84 0.008 80);
+      --fg:          oklch(0.10 0.01 260);
+      --fg-2:        oklch(0.38 0.01 260);
+      --fg-3:        oklch(0.60 0.01 260);
+      --dot-color:   oklch(0.80 0.008 80);
+    }
+
+    /* ─── Reset ────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'IBM Plex Mono', monospace;
+      background: var(--bg);
+      color: var(--fg);
+      overflow-x: hidden;
+      transition: background 0.4s ease, color 0.4s ease;
+    }
+
+    /* ─── Dot grid background ──────────────────────────────────── */
+    .dot-grid {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image: radial-gradient(circle, var(--dot-color) 1px, transparent 1px);
+      background-size: 28px 28px;
+      opacity: 0.55;
+      transition: opacity 0.4s;
+    }
+
+    /* ─── Nav ──────────────────────────────────────────────────── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 28px 48px;
+      pointer-events: none;
+    }
+    .nav-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--fg-2);
+      pointer-events: all;
+      transition: color 0.2s;
+    }
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      pointer-events: all;
+    }
+    .nav-link {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--fg-3);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-link:hover { color: var(--fg); }
+
+    /* Theme toggle */
+    .theme-toggle {
+      width: 36px; height: 20px;
+      border-radius: 10px;
+      background: var(--border);
+      border: 1.5px solid var(--border);
+      cursor: pointer;
+      position: relative;
+      transition: background 0.25s;
+      flex-shrink: 0;
+    }
+    .theme-toggle::after {
+      content: '';
+      position: absolute;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--fg-2);
+      top: 50%; transform: translateY(-50%);
+      left: 2px;
+      transition: left 0.25s cubic-bezier(0.34,1.56,0.64,1), background 0.25s;
+    }
+    [data-theme="light"] .theme-toggle::after {
+      left: 18px;
+      background: var(--accent);
+    }
+    [data-theme="light"] .theme-toggle {
+      background: var(--accent-dim);
+      border-color: var(--accent-line);
+    }
+
+    /* ─── Hero ─────────────────────────────────────────────────── */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 0 48px 72px;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    /* Radial glow behind the name */
+    .hero-glow {
+      position: absolute;
+      bottom: -10%;
+      left: -5%;
+      width: 70vw;
+      height: 70vw;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at center,
+        oklch(0.72 0.17 195 / 0.07) 0%,
+        transparent 65%
+      );
+      pointer-events: none;
+      transition: opacity 0.4s;
+    }
+
+    /* Status badge */
+    .hero-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      color: var(--fg-2);
+      margin-bottom: 28px;
+      opacity: 0;
+      animation: fadeUp 0.6s 0.3s ease forwards;
+    }
+    .status-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: oklch(0.72 0.22 145);
+      position: relative;
+      flex-shrink: 0;
+    }
+    .status-dot::after {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 50%;
+      background: oklch(0.72 0.22 145 / 0.25);
+      animation: pulse 2.4s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.6; }
+      50%       { transform: scale(1.7); opacity: 0; }
+    }
+
+    /* Display name */
+    .hero-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(72px, 13.5vw, 220px);
+      line-height: 0.88;
+      letter-spacing: -0.035em;
+      color: var(--fg);
+      text-wrap: nowrap;
+      white-space: nowrap;
+      margin-bottom: 32px;
+      opacity: 0;
+      animation: fadeUp 0.7s 0.15s ease forwards;
+      transition: color 0.4s;
+      /* Slightly clip right for intentional overflow feel */
+      width: 100%;
+      overflow: hidden;
+    }
+
+    /* Role line */
+    .hero-role-line {
+      display: flex;
+      align-items: baseline;
+      gap: 24px;
+      flex-wrap: wrap;
+      margin-bottom: 0;
+      opacity: 0;
+      animation: fadeUp 0.6s 0.4s ease forwards;
+    }
+    .hero-role {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: clamp(13px, 1.3vw, 17px);
+      font-weight: 300;
+      color: var(--fg-2);
+      letter-spacing: 0.02em;
+    }
+    .cursor {
+      display: inline-block;
+      width: 9px; height: 1.2em;
+      background: var(--accent);
+      vertical-align: text-bottom;
+      animation: blink 1.1s step-end infinite;
+      margin-left: 2px;
+      border-radius: 1px;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0; }
+    }
+    .hero-divider {
+      width: 1px; height: 20px;
+      background: var(--border);
+      align-self: center;
+    }
+    .hero-location {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--fg-3);
+    }
+
+    /* Scroll indicator */
+    .scroll-hint {
+      position: absolute;
+      bottom: 36px;
+      right: 48px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      animation: fadeIn 0.8s 1s ease forwards;
+    }
+    .scroll-hint-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--fg-3);
+      writing-mode: vertical-rl;
+    }
+    .scroll-line {
+      width: 1px;
+      height: 52px;
+      background: linear-gradient(to bottom, var(--accent) 0%, transparent 100%);
+      animation: scrollDrop 2s 1.5s ease-in-out infinite;
+      transform-origin: top;
+    }
+    @keyframes scrollDrop {
+      0%   { transform: scaleY(0); opacity: 1; transform-origin: top; }
+      50%  { transform: scaleY(1); opacity: 1; transform-origin: top; }
+      51%  { transform-origin: bottom; }
+      100% { transform: scaleY(0); opacity: 0; transform-origin: bottom; }
+    }
+
+    /* Large year tag */
+    .hero-year {
+      position: absolute;
+      top: 50%;
+      right: 48px;
+      transform: translateY(-50%);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--fg-3);
+      writing-mode: vertical-rl;
+      opacity: 0;
+      animation: fadeIn 0.8s 0.8s ease forwards;
+    }
+
+    /* ─── About section ────────────────────────────────────────── */
+    .about {
+      position: relative;
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto 1fr auto;
+      padding: 96px 48px 80px;
+      gap: 0;
+      z-index: 1;
+    }
+    .about-section-label {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 80px;
+      opacity: 0;
+      transition: opacity 0.6s ease, transform 0.6s ease;
+      transform: translateY(12px);
+    }
+    .about-section-label.in-view {
+      opacity: 1; transform: translateY(0);
+    }
+    .section-num {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      color: var(--accent);
+      font-weight: 500;
+    }
+    .section-name {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--fg-3);
+    }
+    .section-tick {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Left col — statement */
+    .about-left {
+      padding-right: 64px;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .about-statement {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: clamp(32px, 3.2vw, 52px);
+      line-height: 1.12;
+      letter-spacing: -0.025em;
+      color: var(--fg);
+      text-wrap: pretty;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.7s 0.1s ease, transform 0.7s 0.1s ease;
+    }
+    .about-statement.in-view { opacity: 1; transform: translateY(0); }
+    .about-statement em {
+      font-style: normal;
+      color: var(--accent);
+    }
+    .about-descriptor {
+      margin-top: 40px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      font-weight: 300;
+      color: var(--fg-2);
+      line-height: 1.8;
+      max-width: 480px;
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.7s 0.25s ease, transform 0.7s 0.25s ease;
+    }
+    .about-descriptor.in-view { opacity: 1; transform: translateY(0); }
+
+    /* Stack pills */
+    .about-stack {
+      margin-top: 48px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.7s 0.4s ease, transform 0.7s 0.4s ease;
+    }
+    .about-stack.in-view { opacity: 1; transform: translateY(0); }
+    .stack-pill {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      color: var(--fg-2);
+      border: 1px solid var(--border);
+      padding: 5px 12px;
+      border-radius: 2px;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+    .stack-pill:hover {
+      border-color: var(--accent-line);
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    /* Right col — facts */
+    .about-right {
+      padding-left: 64px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .fact-row {
+      display: grid;
+      grid-template-columns: 130px 1fr;
+      align-items: baseline;
+      padding: 22px 0;
+      border-bottom: 1px solid var(--border);
+      opacity: 0;
+      transform: translateX(16px);
+      transition: opacity 0.55s ease, transform 0.55s ease;
+    }
+    .fact-row.in-view { opacity: 1; transform: translateX(0); }
+    .fact-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--fg-3);
+    }
+    .fact-value {
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--fg);
+      letter-spacing: -0.01em;
+    }
+    .fact-value small {
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 400;
+      font-size: 11px;
+      color: var(--fg-2);
+      margin-left: 8px;
+    }
+    .fact-value .accent { color: var(--accent); }
+
+    /* About bottom bar */
+    .about-bottom-bar {
+      grid-column: 1 / -1;
+      margin-top: 64px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.6s 0.5s ease, transform 0.6s 0.5s ease;
+    }
+    .about-bottom-bar.in-view { opacity: 1; transform: translateY(0); }
+    .about-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--fg);
+      text-decoration: none;
+      padding: 12px 24px;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+    .about-cta:hover {
+      border-color: var(--accent-line);
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+    .about-cta-arrow {
+      display: inline-block;
+      transition: transform 0.2s;
+    }
+    .about-cta:hover .about-cta-arrow { transform: translateX(4px); }
+    .about-years {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--fg-3);
+    }
+
+    /* ─── Horizontal rule between sections ─────────────────────── */
+    .section-rule {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0 48px;
+      opacity: 0.5;
+    }
+
+    /* ─── Placeholder for upcoming sections ────────────────────── */
+    .section-placeholder {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+    }
+    .placeholder-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--fg-3);
+      border: 1px dashed var(--border);
+      padding: 14px 28px;
+      border-radius: 2px;
+    }
+
+    /* ─── Animations ────────────────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    /* ─── Tweaks panel ──────────────────────────────────────────── */
+    .tweaks-panel {
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      z-index: 9999;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      width: 220px;
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 8px 32px oklch(0 0 0 / 0.25);
+    }
+    .tweaks-panel.active { display: flex; }
+    .tweaks-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--fg-2);
+    }
+    .tweak-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .tweak-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      color: var(--fg-3);
+    }
+    .tweak-input {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--fg);
+      border-radius: 4px;
+      padding: 6px 10px;
+      width: 100%;
+    }
+    .tweak-input:focus { outline: 1px solid var(--accent); }
+    .tweak-select {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--fg);
+      border-radius: 4px;
+      padding: 6px 10px;
+      width: 100%;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Dot grid -->
+  <div class="dot-grid" id="dotGrid"></div>
+
+  <!-- ─── Nav ─────────────────────────────────────────────────── -->
+  <nav>
+    <div class="nav-logo">NR</div>
+    <div class="nav-right">
+      <a href="#" class="nav-link">Work</a>
+      <a href="#" class="nav-link">About</a>
+      <a href="#" class="nav-link">Contact</a>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme"></button>
+    </div>
+  </nav>
+
+  <!-- ─── Hero ─────────────────────────────────────────────────── -->
+  <section class="hero" id="hero">
+    <div class="hero-glow"></div>
+
+    <!-- Vertical year label -->
+    <div class="hero-year">Est. 2026 · Portfolio</div>
+
+    <!-- Main content block -->
+    <div class="hero-status">
+      <span class="status-dot"></span>
+      Available for freelance
+    </div>
+
+    <h1 class="hero-name" id="heroName">Alex Chen</h1>
+
+    <div class="hero-role-line">
+      <span class="hero-role" id="heroRole">
+        <span id="roleText"></span><span class="cursor"></span>
+      </span>
+      <span class="hero-divider"></span>
+      <span class="hero-location">San Francisco, CA</span>
+    </div>
+
+    <!-- Scroll hint -->
+    <div class="scroll-hint">
+      <span class="scroll-hint-label">Scroll</span>
+      <div class="scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- ─── About ───────────────────────────────────────────────── -->
+  <hr class="section-rule" />
+  <section class="about" id="about" data-screen-label="02 About">
+
+    <div class="about-section-label reveal-about">
+      <span class="section-num">02</span>
+      <span class="section-name">About</span>
+      <span class="section-tick"></span>
+    </div>
+
+    <!-- Left: Statement + descriptor + stack -->
+    <div class="about-left">
+      <div>
+        <h2 class="about-statement reveal-about">
+          No classroom.<br/>
+          No roadmap.<br/>
+          Just <em>shipped products.</em>
+        </h2>
+        <p class="about-descriptor reveal-about">
+          Self-taught, third year in, already working with real clients.
+          I build full-stack apps that perform cleanly under pressure —
+          because I learned by shipping, not by studying.
+        </p>
+      </div>
+      <div class="about-stack reveal-about">
+        <span class="stack-pill">React.js</span>
+        <span class="stack-pill">Node.js</span>
+        <span class="stack-pill">Express.js</span>
+        <span class="stack-pill">TypeScript</span>
+        <span class="stack-pill">Redux</span>
+        <span class="stack-pill">GraphQL</span>
+        <span class="stack-pill">Tailwind CSS</span>
+        <span class="stack-pill">REST APIs</span>
+        <span class="stack-pill">Git</span>
+      </div>
+    </div>
+
+    <!-- Right: Fact rows -->
+    <div class="about-right">
+      <div class="fact-row reveal-about" style="--delay:0.1s">
+        <span class="fact-label">Education</span>
+        <span class="fact-value">Jain University <small>· 3rd year CS</small></span>
+      </div>
+      <div class="fact-row reveal-about" style="--delay:0.18s">
+        <span class="fact-label">CGPA</span>
+        <span class="fact-value"><span class="accent">9.07</span> <small>/ 10.0</small></span>
+      </div>
+      <div class="fact-row reveal-about" style="--delay:0.26s">
+        <span class="fact-label">Status</span>
+        <span class="fact-value"><span class="accent">Freelancing</span> <small>· open to more</small></span>
+      </div>
+      <div class="fact-row reveal-about" style="--delay:0.34s">
+        <span class="fact-label">Focus</span>
+        <span class="fact-value">Full-Stack <small>· React · Node</small></span>
+      </div>
+      <div class="fact-row reveal-about" style="--delay:0.42s">
+        <span class="fact-label">Open to</span>
+        <span class="fact-value">Freelance <small>· internships · collabs</small></span>
+      </div>
+      <div class="fact-row reveal-about" style="--delay:0.50s">
+        <span class="fact-label">Outside code</span>
+        <span class="fact-value">Public speaking <small>· Gym · Late builds</small></span>
+      </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="about-bottom-bar reveal-about">
+      <a href="/cdn-cgi/l/email-protection#741a15191d0034110c15190418115a171b19" class="about-cta">
+        Get in touch <span class="about-cta-arrow">→</span>
+      </a>
+      <span class="about-years">Bengaluru · self-taught since 2022</span>
+    </div>
+
+  </section>
+
+  <!-- Placeholder for next sections -->
+  <hr class="section-rule" />
+  <section class="section-placeholder">
+    <span class="placeholder-label">Next section · Awaiting confirmation</span>
+  </section>
+
+  <!-- ─── Tweaks panel ─────────────────────────────────────────── -->
+  <div class="tweaks-panel" id="tweaksPanel">
+    <div class="tweaks-title">Tweaks</div>
+
+    <div class="tweak-row">
+      <label class="tweak-label">Display name</label>
+      <input class="tweak-input" id="tw-name" type="text" value="Alex Chen" placeholder="Your name" />
+    </div>
+
+    <div class="tweak-row">
+      <label class="tweak-label">Role (shown in hero)</label>
+      <input class="tweak-input" id="tw-role" type="text" value="Full-Stack Engineer" placeholder="Your role" />
+    </div>
+
+    <div class="tweak-row">
+      <label class="tweak-label">Location</label>
+      <input class="tweak-input" id="tw-loc" type="text" value="San Francisco, CA" placeholder="City, Country" />
+    </div>
+
+    <div class="tweak-row">
+      <label class="tweak-label">Accent color</label>
+      <select class="tweak-select" id="tw-accent">
+        <option value="oklch(0.72 0.17 195)">Cyan-Teal (default)</option>
+        <option value="oklch(0.72 0.17 260)">Electric Blue</option>
+        <option value="oklch(0.72 0.18 310)">Violet</option>
+        <option value="oklch(0.72 0.18 30)">Amber</option>
+        <option value="oklch(0.72 0.20 145)">Emerald</option>
+      </select>
+    </div>
+  </div>
+
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js" defer></script><script>
+    const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+      "name": "NAMIT",
+      "role": "Full-Stack Engineer",
+      "location": "Benagluru",
+      "accent": "oklch(0.72 0.17 195)"
+    }/*EDITMODE-END*/;
+
+    /* ─── Theme toggle ─────────────────────────────────────────── */
+    const html = document.documentElement;
+    const toggleBtn = document.getElementById('themeToggle');
+    const savedTheme = localStorage.getItem('pf-theme') || 'dark';
+    html.setAttribute('data-theme', savedTheme);
+
+    toggleBtn.addEventListener('click', () => {
+      const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('pf-theme', next);
+    });
+
+    /* ─── Typing animation ─────────────────────────────────────── */
+    const roles = [
+      'Full-Stack Developer',
+      'Self-Taught Builder',
+      'React · Node · TypeScript',
+    ];
+    let roleIdx = 0, charIdx = 0, deleting = false;
+    const roleEl = document.getElementById('roleText');
+    const currentRole = () => roles[roleIdx];
+
+    function typeStep() {
+      const target = currentRole();
+      if (!deleting) {
+        charIdx++;
+        roleEl.textContent = target.slice(0, charIdx);
+        if (charIdx === target.length) {
+          deleting = true;
+          setTimeout(typeStep, 2200);
+          return;
+        }
+        setTimeout(typeStep, 48 + Math.random() * 28);
+      } else {
+        charIdx--;
+        roleEl.textContent = target.slice(0, charIdx);
+        if (charIdx === 0) {
+          deleting = false;
+          roleIdx = (roleIdx + 1) % roles.length;
+          setTimeout(typeStep, 320);
+          return;
+        }
+        setTimeout(typeStep, 22);
+      }
+    }
+    setTimeout(typeStep, 900);
+
+    /* ─── Subtle parallax on dot grid ──────────────────────────── */
+    const dotGrid = document.getElementById('dotGrid');
+    document.addEventListener('mousemove', (e) => {
+      const dx = (e.clientX / window.innerWidth  - 0.5) * 12;
+      const dy = (e.clientY / window.innerHeight - 0.5) * 12;
+      dotGrid.style.backgroundPosition = `${dx}px ${dy}px`;
+    });
+
+    /* ─── Tweaks ────────────────────────────────────────────────── */
+    const panel = document.getElementById('tweaksPanel');
+
+    window.addEventListener('message', (e) => {
+      if (e.data?.type === '__activate_edit_mode')   panel.classList.add('active');
+      if (e.data?.type === '__deactivate_edit_mode') panel.classList.remove('active');
+    });
+
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+
+    // Restore tweaks
+    const tw = TWEAK_DEFAULTS;
+    applyTweaks(tw);
+
+    document.getElementById('tw-name').value   = tw.name;
+    document.getElementById('tw-role').value   = tw.role;
+    document.getElementById('tw-loc').value    = tw.location;
+    document.getElementById('tw-accent').value = tw.accent;
+
+    function applyTweaks(t) {
+      document.getElementById('heroName').textContent = t.name;
+      document.querySelector('.hero-location').textContent = t.location;
+      if (t.accent) document.documentElement.style.setProperty('--accent', t.accent);
+      // Update roles array with tweaked role
+      roles[0] = t.role;
+    }
+
+    function onTweakChange() {
+      const edits = {
+        name:     document.getElementById('tw-name').value,
+        role:     document.getElementById('tw-role').value,
+        location: document.getElementById('tw-loc').value,
+        accent:   document.getElementById('tw-accent').value,
+      };
+      applyTweaks(edits);
+      window.parent.postMessage({ type: '__edit_mode_set_keys', edits }, '*');
+    }
+
+    ['tw-name','tw-role','tw-loc'].forEach(id =>
+      document.getElementById(id).addEventListener('input', onTweakChange)
+    );
+    document.getElementById('tw-accent').addEventListener('change', onTweakChange);
+
+    /* ─── Scroll reveal (IntersectionObserver) ──────────────────── */
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        const el = entry.target;
+        const delay = el.style.getPropertyValue('--delay') || '0s';
+        el.style.transitionDelay = delay;
+        el.classList.add('in-view');
+        revealObserver.unobserve(el);
+      });
+    }, { threshold: 0.15 });
+
+    document.querySelectorAll('.reveal-about').forEach(el => revealObserver.observe(el));
+  </script>
+</body>
+</html>

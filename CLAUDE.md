@@ -21,26 +21,24 @@ npm run lint     # Run ESLint
 
 ## Architecture
 
-### V1 (current, `app/`)
+### V1 (parked, `app/`)
 
-`app/page.tsx` → `App.tsx` (root client component) → wraps everything in `SmoothScroll` (Lenis) + `ThemeProvider`.
+V1 is no longer routed: its entry `app/page.tsx` was renamed to [app/page_old.tsx](app/page_old.tsx) so the route group below takes over `/`. Code still lives in [app/components/](app/components/) and may be referenced while porting — entry chain was `page.tsx` → `App.tsx` → `SmoothScroll` (Lenis) + `ThemeProvider` → `Background.tsx` (renders `HeroSection`, `AboutSection`, `Projects`, `ContactMe`, `Timeline`).
 
-Theme is class-based: `ThemeProvider` adds `"light"` or `"dark"` to `<html>` classname, persisted to `localStorage`. CSS variables for both themes live in `app/globals.css`.
+V1 theme was class-based: `ThemeProvider` toggled `"light"`/`"dark"` on `<html>`, persisted to `localStorage`. CSS variables live in [app/globals.css](app/globals.css).
 
-Components live in `app/components/`. Section components (`HeroSection`, `AboutSection`, `Projects`, `ContactMe`, `Timeline`) are rendered by `Background.tsx`. Primitive UI components (`button`, `badge`, `card`) are in `app/components/ui/` and use `class-variance-authority`.
+Primitive UI (`button`, `badge`, `card`) in [app/components/ui/](app/components/ui/) uses `class-variance-authority`. [lib/utils.ts](lib/utils.ts) exports `cn()` — a `clsx` + `tailwind-merge` helper used throughout both versions.
 
-`lib/utils.ts` exports `cn()` — a `clsx` + `tailwind-merge` helper used throughout.
+### V2 (active, `app/(v2)/`)
 
-### V2 (in progress, `app/(v2)/`)
-
-Route group that isolates the new architecture from V1. Has its own nested `layout.tsx` (no `<html>`/`<body>` — those belong to root), isolated styles, and folder structure:
+Route group that owns `/` now. Has its own nested `layout.tsx` (no `<html>`/`<body>` — those belong to [app/layout.tsx](app/layout.tsx)), isolated styles, and folder structure:
 
 ```
 app/(v2)/
   layout.tsx          # Nested layout: wraps content in <div data-theme="dark" class="v2-root">
-  page.tsx            # Entry point — renders HeroSection
+  page.tsx            # Entry point — renders HeroSection + AboutSection
   components/
-    sections/         # Page-level section components (HeroSection, etc.)
+    sections/         # Page-level section components (HeroSection, AboutSection)
     shared/           # Cross-cutting UI (nav, footer, etc.)
     ui/               # Primitive/atomic components
   styles/
