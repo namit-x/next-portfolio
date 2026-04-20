@@ -15,7 +15,7 @@ export default function HeroSection() {
           Available for freelance
         </div>
 
-        <h1 className="hero-name">NAMIT RANA</h1>
+        <h1 className="hero-name">NAMIT</h1>
 
         <div className="hero-role-line">
           <span className="hero-role">

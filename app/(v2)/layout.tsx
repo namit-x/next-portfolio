@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import { Syne, IBM_Plex_Mono } from 'next/font/google'
+import ThemeProvider from './components/layout/ThemeProvider'
+import Navbar from './components/layout/Navbar'
 import './styles/theme.css'
 
 const syne = Syne({
@@ -22,8 +24,9 @@ export const metadata: Metadata = {
 
 export default function V2Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div data-theme="dark" className={`v2-root ${syne.variable} ${ibmMono.variable}`}>
+    <ThemeProvider fontClasses={`${syne.variable} ${ibmMono.variable}`}>
+      <Navbar />
       {children}
-    </div>
+    </ThemeProvider>
   )
 }

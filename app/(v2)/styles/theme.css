@@ -129,7 +129,7 @@ html {
 /* ── Base ──────────────────────────────────────────────────────────── */
 
 .v2-root {
-  background-color: transparent;
+  background-color: hsl(var(--background));
   color: hsl(var(--foreground));
   min-height: 100dvh;
   transition: color 0.3s;
@@ -334,9 +334,100 @@ html {
 
 :root {
   --hero-accent:       oklch(0.72 0.17 195);
+  --hero-accent-dim:   oklch(0.72 0.17 195 / 0.12);
+  --hero-accent-line:  oklch(0.72 0.17 195 / 0.35);
   --hero-status-green: oklch(0.72 0.22 145);
   --hero-dot-dark:     oklch(0.22 0.01 260);
   --hero-dot-light:    oklch(0.80 0.008 80);
+}
+
+/* ── Navbar ──────────────────────────────────────────────────────────── */
+
+.v2-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.75rem 3rem;
+  pointer-events: none;
+}
+@media (max-width: 640px) {
+  .v2-nav { padding: 1.25rem 1.5rem; }
+}
+
+.v2-nav-logo {
+  font-family: var(--font-syne, 'Syne', sans-serif);
+  font-weight: 700;
+  font-size: 0.875rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+  pointer-events: all;
+  transition: color 0.2s;
+}
+
+.v2-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  pointer-events: all;
+}
+
+.v2-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+@media (max-width: 640px) {
+  .v2-nav-links { display: none; }
+}
+
+.v2-nav-link {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground) / 0.7);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.v2-nav-link:hover { color: hsl(var(--foreground)); }
+
+/* Theme toggle pill */
+.v2-theme-toggle {
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  background: hsl(var(--border));
+  border: 1.5px solid hsl(var(--border));
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+  padding: 0;
+  transition: background 0.25s, border-color 0.25s;
+}
+.v2-theme-toggle::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: hsl(var(--muted-foreground));
+  top: 50%;
+  transform: translateY(-50%);
+  left: 2px;
+  transition: left 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.25s;
+}
+[data-theme="light"] .v2-theme-toggle::after {
+  left: 18px;
+  background: var(--hero-accent);
+}
+[data-theme="light"] .v2-theme-toggle {
+  background: var(--hero-accent-dim);
+  border-color: var(--hero-accent-line);
 }
 
 /* Font family utilities — vars resolved by next/font */
