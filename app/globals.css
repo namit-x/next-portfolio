@@ -6,7 +6,7 @@
 .v2-about-extracted {
   min-height: 100vh;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   padding: 2rem 0;
   margin: 0;
   position: relative;
@@ -18,8 +18,7 @@
 /* Make container full width instead of max-width */
 .v2-about-extracted .v2-container {
   width: 100%;
-  padding: 0;
-  /* REMOVED: 0 4rem - was causing white borders */
+  padding-inline: var(--container-pad);
   margin: 0 auto;
 }
 
@@ -136,7 +135,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 3rem;
+  margin-bottom: 1.5rem;
 }
 
 .v2-about-extracted__section-num {
@@ -154,11 +153,50 @@
   color: hsl(var(--foreground));
 }
 
+/* Section label tick marker */
+.v2-about-extracted__section-tick {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: hsl(var(--primary));
+  flex-shrink: 0;
+}
+
+/* Accent text for important values */
+.v2-about-extracted__accent {
+  color: hsl(var(--primary));
+  font-weight: 700;
+}
+
+/* Detail text for fact supplementary info */
+.v2-about-extracted__fact-detail {
+  font-size: 0.9rem;
+  color: hsl(var(--muted-foreground));
+  margin-left: 0.25rem;
+}
+
+/* Footer metadata text */
+.v2-about-extracted__years {
+  font-size: 0.875rem;
+  color: hsl(var(--muted-foreground));
+}
+
+/* CTA arrow element */
+.v2-about-extracted__cta-arrow {
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+.v2-about-extracted__cta:hover .v2-about-extracted__cta-arrow {
+  transform: translateX(4px);
+}
+
 /* Responsive design */
 @media (max-width: 1024px) {
   .v2-about-extracted .v2-container {
-    padding: 0;
-    /* REMOVED: 0 2rem - was causing white borders */
+    width: 100%;
+    padding: 2rem 0;
+    /* move spacing inside instead */
   }
 
   .v2-about-extracted__grid {
@@ -177,8 +215,7 @@
   }
 
   .v2-about-extracted .v2-container {
-    padding: 0;
-    /* REMOVED: 0 1.5rem - was causing white borders */
+    padding-inline: 1.5rem;
   }
 
   .v2-about-extracted__grid {

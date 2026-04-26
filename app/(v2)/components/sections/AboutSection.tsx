@@ -45,15 +45,10 @@ export default function AboutSection() {
       {/* <hr className="v2-section-rule" /> */}
       <section
         id="about"
-        className="v2-about-extracted border-2"
+        className="v2-about-extracted"
         aria-labelledby="about-title"
       >
-        <div className="v2-container border-2">
-          <div className="v2-about-extracted__section-label">
-            <span className="v2-about-extracted__section-num">02</span>
-            <span className="v2-about-extracted__section-name">About</span>
-            <span className="v2-about-extracted__section-tick" aria-hidden="true" />
-          </div>
+        <div className="v2-container">
 
           <div className="v2-about-extracted__grid">
             <div className="v2-about-extracted__left">
