@@ -218,3 +218,47 @@
         font-size: 1rem;
     }
 }
+
+/* ── Vault Animation Keyframes ────────────────────────────────── */
+
+@keyframes vesta__pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 hsl(var(--primary) / 0.5);
+    }
+
+    50% {
+        transform: scale(1.1);
+        box-shadow: 0 0 0 8px hsl(var(--primary) / 0);
+    }
+}
+
+/* ── Vesta Hotspot Animations ─────────────────────────────────── */
+
+.vesta__hotspot:hover {
+    transform: scale(1.2);
+    box-shadow: 0 0 12px hsl(var(--primary) / 0.6);
+}
+
+.vesta__hotspot:hover::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border: 2px solid hsl(var(--primary) / 0.3);
+    border-radius: 50%;
+    animation: pulse-ring 1s ease-out;
+}
+
+@keyframes pulse-ring {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}

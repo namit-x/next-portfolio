@@ -3,6 +3,8 @@
 import { useRef, useEffect } from 'react'
 import { ScrollContextProvider, useScrollContext } from '../../context/ScrollContext'
 import SelectedWorkHUD from './SelectedWorkHUD'
+import SelectedWorkVault from './SelectedWorkVault'
+import SelectedWorkVesta from './SelectedWorkVesta'
 
 /**
  * Inner component that uses the scroll context
@@ -50,32 +52,11 @@ function SelectedWorkContent() {
             {/* HUD overlay (fixed) */}
             <SelectedWorkHUD />
 
-            {/* Entry animation placeholder (Phase 2) */}
-            <div className="selected-work__entry" style={{ minHeight: '100vh' }}>
-                <div className="selected-work__entry-content">
-                    <h2 id="work-title" className="selected-work__entry-title">
-                        Selected Work
-                    </h2>
-                    <p className="selected-work__entry-subtitle">
-                        Three experiences. Three scroll patterns. One stage.
-                    </p>
-                </div>
-            </div>
+            {/* Entry animation: "The Vault" (Phase 2) */}
+            <SelectedWorkVault />
 
-            {/* Project 01: Vesta (Phase 3) */}
-            <div className="selected-work__project selected-work__project--vesta">
-                <div
-                    style={{
-                        minHeight: '100vh',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'hsl(var(--muted-foreground))',
-                    }}
-                >
-                    Vesta - Horizontal Pan Cinema (Phase 3)
-                </div>
-            </div>
+            {/* Project 01: Vesta — Horizontal Pan Cinema (Phase 3) */}
+            <SelectedWorkVesta />
 
             {/* Project 02: RAG (Phase 4) */}
             <div className="selected-work__project selected-work__project--rag">
