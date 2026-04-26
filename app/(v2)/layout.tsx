@@ -3,6 +3,7 @@ import { Syne, IBM_Plex_Mono } from 'next/font/google'
 import ThemeProvider from './components/layout/ThemeProvider'
 import Navbar from './components/layout/Navbar'
 import './styles/theme.css'
+import './styles/selected-work.css'
 
 const syne = Syne({
   subsets: ['latin'],

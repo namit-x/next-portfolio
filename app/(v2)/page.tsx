@@ -1,5 +1,6 @@
 import HeroSection from './components/sections/HeroSection'
 import AboutSection from './components/sections/AboutSection'
+import SelectedWork from './components/sections/SelectedWork'
 
 export default function V2Page() {
   return (
@@ -11,6 +12,7 @@ export default function V2Page() {
         <span className="v2-about-extracted__section-tick" aria-hidden="true" />
       </div>
       <AboutSection />
+      <SelectedWork />
     </main>
   )
 }
