@@ -5,6 +5,8 @@ import { ScrollContextProvider, useScrollContext } from '../../context/ScrollCon
 import SelectedWorkHUD from './SelectedWorkHUD'
 import SelectedWorkVault from './SelectedWorkVault'
 import SelectedWorkVesta from './SelectedWorkVesta'
+import SelectedWorkRAG from './SelectedWorkRAG'
+import SelectedWorkClueless from './SelectedWorkClueless'
 
 /**
  * Inner component that uses the scroll context
@@ -58,35 +60,11 @@ function SelectedWorkContent() {
             {/* Project 01: Vesta — Horizontal Pan Cinema (Phase 3) */}
             <SelectedWorkVesta />
 
-            {/* Project 02: RAG (Phase 4) */}
-            <div className="selected-work__project selected-work__project--rag">
-                <div
-                    style={{
-                        minHeight: '100vh',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'hsl(var(--muted-foreground))',
-                    }}
-                >
-                    RAG - Terminal Theater Split Screen (Phase 4)
-                </div>
-            </div>
+            {/* Project 02: RAG — Terminal Theater Split Screen (Phase 4) */}
+            <SelectedWorkRAG />
 
-            {/* Project 03: Clueless (Phase 5) */}
-            <div className="selected-work__project selected-work__project--clueless">
-                <div
-                    style={{
-                        minHeight: '100vh',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'hsl(var(--muted-foreground))',
-                    }}
-                >
-                    Clueless - Blueprint Room Three-Column (Phase 5)
-                </div>
-            </div>
+            {/* Project 03: Clueless — Blueprint Three-Column (Phase 5) */}
+            <SelectedWorkClueless />
         </section>
     )
 }
