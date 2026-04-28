@@ -5,6 +5,8 @@ import { useScrollHijack } from '../../hooks/useScrollHijack'
 import { useScrollContext } from '../../context/ScrollContext'
 import { PROJECTS } from '../../data/projects'
 import { OptimizedImage } from '../ui/OptimizedImage'
+import { useTheme } from '../layout/ThemeProvider'
+import { resolveThemeHsl } from '../../utils/resolveThemeHsl'
 import gsap from 'gsap'
 
 /**
@@ -18,17 +20,31 @@ export default function SelectedWorkClueless() {
     const rightRailRef = useRef<HTMLDivElement>(null)
 
     const [selectedNode, setSelectedNode] = useState<string | null>(null)
+    const { theme } = useTheme()
     const { setCurrentProject, setProjectProgress } = useScrollContext()
-    const cluelessProject = PROJECTS.find(p => p.type === 'clueless')
+    const cluelessProject = PROJECTS?.find(p => p?.type === 'clueless')
     const cluelessData = cluelessProject?.cluelessData
-    const nodes = cluelessData?.nodes ?? []
-    const edges = cluelessData?.edges ?? []
-    const decisions = cluelessData?.decisions ?? []
-    const tags = cluelessData?.tags ?? []
+    const nodes = Array.isArray(cluelessData?.nodes) ? cluelessData.nodes : []
+    const edges = Array.isArray(cluelessData?.edges) ? cluelessData.edges : []
+    const decisions = Array.isArray(cluelessData?.decisions) ? cluelessData.decisions : []
+    const tags = Array.isArray(cluelessData?.tags) ? cluelessData.tags : []
     const imageUrl = cluelessData?.imageUrl ?? '/Shoporia.webp'
     const { containerRef, totalScroll } = useScrollHijack(Boolean(cluelessData))
     const progress = Math.min(100, (totalScroll / 2400) * 100)
     const isComplete = progress > 90
+    const primaryColor = 'hsl(180 100% 50%)'
+    const cardColor = resolveThemeHsl(
+        '--card',
+        theme === 'dark' ? 'hsl(240 10% 7%)' : 'hsl(0 0% 100%)'
+    )
+    const borderColor = resolveThemeHsl(
+        '--border',
+        theme === 'dark' ? 'hsl(240 4% 16%)' : 'hsl(240 6% 90%)'
+    )
+    const borderColorMuted = resolveThemeHsl(
+        '--border',
+        theme === 'dark' ? 'hsla(240 4% 16% / 0.5)' : 'hsla(240 6% 90% / 0.5)'
+    )
 
     useEffect(() => {
         setCurrentProject(3)
@@ -43,7 +59,7 @@ export default function SelectedWorkClueless() {
 
         // Light up all nodes
         tl.to(centerRef.current.querySelectorAll('[data-node]'), {
-            fill: 'hsl(180 100% 50%)',
+            fill: primaryColor,
             duration: 0.6,
             stagger: 0.05,
         })
@@ -61,9 +77,10 @@ export default function SelectedWorkClueless() {
         )
 
         // Show final stat
-        if (rightRailRef.current) {
+        const finalStat = rightRailRef.current?.querySelector('[data-final-stat]')
+        if (finalStat) {
             tl.to(
-                rightRailRef.current.querySelector('[data-final-stat]'),
+                finalStat,
                 {
                     opacity: 1,
                     duration: 0.6,
@@ -71,7 +88,7 @@ export default function SelectedWorkClueless() {
                 '<'
             )
         }
-    }, [isComplete])
+    }, [borderColor, cardColor, isComplete, primaryColor])
 
     if (!cluelessData) {
         return <div>Clueless project data not found</div>
@@ -132,7 +149,7 @@ export default function SelectedWorkClueless() {
 
                 {/* Tags */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    {tags && tags.map(tag => (
+                    {tags.map(tag => (
                         <div
                             key={tag}
                             style={{
@@ -177,7 +194,7 @@ export default function SelectedWorkClueless() {
                     preserveAspectRatio="xMidYMid meet"
                 >
                     {/* Edges */}
-                    {edges && edges.map((edge, i) => {
+                    {edges.map((edge, i) => {
                         const fromNode = nodes.find(n => n.id === edge.from)
                         const toNode = nodes.find(n => n.id === edge.to)
                         if (!fromNode || !toNode) return null
@@ -191,8 +208,8 @@ export default function SelectedWorkClueless() {
                                     y2={toNode.y}
                                     stroke={
                                         selectedNode === edge.from || selectedNode === edge.to
-                                            ? 'hsl(180 100% 50%)'
-                                            : 'hsl(var(--border) / 0.5)'
+                                            ? primaryColor
+                                            : borderColorMuted
                                     }
                                     strokeWidth="0.5"
                                     opacity={
@@ -205,7 +222,7 @@ export default function SelectedWorkClueless() {
                     })}
 
                     {/* Nodes */}
-                    {nodes && nodes.map(node => (
+                    {nodes.map(node => (
                         <circle
                             key={node.id}
                             data-node={node.id}
@@ -214,13 +231,13 @@ export default function SelectedWorkClueless() {
                             r={selectedNode === node.id ? 8 : 5}
                             fill={
                                 selectedNode === node.id
-                                    ? 'hsl(180 100% 50%)'
-                                    : 'hsl(var(--card))'
+                                    ? primaryColor
+                                    : cardColor
                             }
                             stroke={
                                 selectedNode === node.id
-                                    ? 'hsl(180 100% 50%)'
-                                    : 'hsl(var(--border))'
+                                    ? primaryColor
+                                    : borderColor
                             }
                             strokeWidth="0.5"
                             style={{
@@ -234,7 +251,7 @@ export default function SelectedWorkClueless() {
 
                 {/* Node labels overlay */}
                 <div style={{ position: 'relative', width: '100%', height: '100%', pointerEvents: 'none' }}>
-                    {nodes && nodes.map(node => (
+                    {nodes.map(node => (
                         <div
                             key={`label-${node.id}`}
                             style={{
@@ -273,7 +290,7 @@ export default function SelectedWorkClueless() {
                     paddingRight: '1rem',
                 }}
             >
-                {decisions && decisions.map(decision => {
+                {decisions.map(decision => {
                     const isHighlighted = selectedNode === decision.nodeId
                     return (
                         <div

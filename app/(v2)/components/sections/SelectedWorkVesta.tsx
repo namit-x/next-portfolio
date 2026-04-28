@@ -22,12 +22,8 @@ export default function SelectedWorkVesta() {
     const imageUrl = vestaData?.imageUrl || '/Vesta.webp'
 
     // CRITICAL FIX: Ensure arrays are always valid, even during SSR/hydration
-    const hotspots = vestaData?.hotspots && Array.isArray(vestaData.hotspots)
-        ? vestaData.hotspots
-        : []
-    const stats = vestaData?.stats && Array.isArray(vestaData.stats)
-        ? vestaData.stats
-        : []
+    const hotspots = Array.isArray(vestaData?.hotspots) ? vestaData.hotspots : []
+    const stats = Array.isArray(vestaData?.stats) ? vestaData.stats : []
 
     const { containerRef, totalScroll } = useScrollHijack(Boolean(vestaData), (state) => {
         // Convert vertical scroll to horizontal pan
@@ -35,10 +31,6 @@ export default function SelectedWorkVesta() {
         const newPanX = Math.max(0, Math.min(state.totalScroll * 0.5, 300 * 4 - 100))
         setPanX(newPanX)
     })
-
-    console.log('Vesta data:', stats)
-    console.log('Vesta data:', hotspots)
-
 
     useEffect(() => {
         // Max scroll range for Vesta ≈ 1200px of content

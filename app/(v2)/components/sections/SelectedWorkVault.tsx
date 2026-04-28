@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import gsap from 'gsap'
+import { useTheme } from '../layout/ThemeProvider'
+import { resolveThemeHsl } from '../../utils/resolveThemeHsl'
 
 /**
  * Entry Animation: "The Vault"
@@ -14,6 +16,11 @@ export default function SelectedWorkVault() {
     const gridRef = useRef<HTMLDivElement>(null)
     const codenamesRef = useRef<HTMLDivElement>(null)
     const [hasAnimated, setHasAnimated] = useState(false)
+    const { theme } = useTheme()
+    const backgroundColor = resolveThemeHsl(
+        '--background',
+        theme === 'dark' ? 'hsl(240 10% 4%)' : 'hsl(240 10% 97%)'
+    )
 
     const animateVault = useCallback(() => {
         if (!backgroundRef.current || !gridRef.current || !codenamesRef.current) {
@@ -82,7 +89,7 @@ export default function SelectedWorkVault() {
         tl.to(
             backgroundRef.current,
             {
-                background: 'hsl(var(--background))',
+                background: backgroundColor,
                 duration: 0.6,
                 ease: 'power2.inOut',
             },
@@ -100,7 +107,7 @@ export default function SelectedWorkVault() {
             },
             '<'
         )
-    }, [])
+    }, [backgroundColor])
 
     useEffect(() => {
         if (hasAnimated || !containerRef.current) return
@@ -130,7 +137,7 @@ export default function SelectedWorkVault() {
                 style={{
                     position: 'absolute',
                     inset: 0,
-                    background: 'hsl(var(--background))',
+                    background: backgroundColor,
                     transition: 'none',
                     zIndex: 1,
                 }}

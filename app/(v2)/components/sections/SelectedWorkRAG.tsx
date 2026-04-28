@@ -17,18 +17,18 @@ export default function SelectedWorkRAG() {
     const [hoveredNode, setHoveredNode] = useState<string | null>(null)
     const { setCurrentProject, setProjectProgress } = useScrollContext()
 
-    const ragProject = PROJECTS.find(p => p.type === 'rag')
+    const ragProject = PROJECTS?.find(p => p?.type === 'rag')
     const ragData = ragProject?.ragData
-    const terminalOutput = ragData?.terminalOutput ?? []
-    const nodes = ragData?.nodes ?? []
-    const edges = ragData?.edges ?? []
+    const terminalOutput = Array.isArray(ragData?.terminalOutput) ? ragData.terminalOutput : []
+    const edges = Array.isArray(ragData?.edges) ? ragData.edges : []
+    const safeNodes = Array.isArray(ragData?.nodes) ? ragData.nodes : []
     const finalStat = ragData?.finalStat ?? ''
     const imageUrl = ragData?.imageUrl ?? '/Advance.webp'
 
     const { containerRef, totalScroll } = useScrollHijack(Boolean(ragData))
     const progress = Math.min(100, (totalScroll / 2400) * 100)
     const terminalLineCount = Math.floor((progress / 100) * terminalOutput.length)
-    const nodeCount = Math.floor((progress / 100) * nodes.length)
+    const nodeCount = Math.floor((progress / 100) * safeNodes.length)
     const edgeCount = Math.floor((progress / 100) * edges.length)
 
     useEffect(() => {
@@ -130,8 +130,8 @@ export default function SelectedWorkRAG() {
                 >
                     {/* Draw edges */}
                     {edges.slice(0, edgeCount).map((edge, i) => {
-                        const fromNode = nodes.find(n => n.id === edge.from)
-                        const toNode = nodes.find(n => n.id === edge.to)
+                        const fromNode = safeNodes.find(n => n.id === edge.from)
+                        const toNode = safeNodes.find(n => n.id === edge.to)
                         if (!fromNode || !toNode) return null
 
                         return (
@@ -161,7 +161,7 @@ export default function SelectedWorkRAG() {
 
                 {/* Node elements */}
                 <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-                    {nodes.slice(0, nodeCount).map(node => (
+                    {safeNodes.slice(0, nodeCount).map(node => (
                         <div
                             key={node.id}
                             style={{
@@ -201,7 +201,7 @@ export default function SelectedWorkRAG() {
             </div>
 
             {/* Final stat overlay (shows at end of scroll) */}
-            {nodeCount === nodes.length && edgeCount === edges.length && (
+            {nodeCount === safeNodes.length && edgeCount === edges.length && (
                 <div
                     style={{
                         position: 'fixed',
