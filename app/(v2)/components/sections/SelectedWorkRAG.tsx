@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from 'react'
 import { useScrollHijack } from '../../hooks/useScrollHijack'
 import { useScrollContext } from '../../context/ScrollContext'
 import { PROJECTS } from '../../data/projects'
+import { OptimizedImage } from '../ui/OptimizedImage'
 
 /**
  * RAG: Terminal Theater Split Screen
@@ -12,40 +13,39 @@ import { PROJECTS } from '../../data/projects'
  * Interaction: Hover nodes to highlight corresponding terminal line
  */
 export default function SelectedWorkRAG() {
-    const containerRef = useRef<HTMLDivElement>(null)
     const terminalRef = useRef<HTMLDivElement>(null)
-    const [terminalLines, setTerminalLines] = useState(0)
-    const [nodeBuiltCount, setNodeBuiltCount] = useState(0)
-    const [edgeBuiltCount, setEdgeBuiltCount] = useState(0)
     const [hoveredNode, setHoveredNode] = useState<string | null>(null)
     const { setCurrentProject, setProjectProgress } = useScrollContext()
 
-    const ragProject = PROJECTS.find(p => p.type === 'rag')!
-    const { terminalOutput, nodes, edges, finalStat } = ragProject.ragData!
+    const ragProject = PROJECTS.find(p => p.type === 'rag')
+    const ragData = ragProject?.ragData
+    const terminalOutput = ragData?.terminalOutput ?? []
+    const nodes = ragData?.nodes ?? []
+    const edges = ragData?.edges ?? []
+    const finalStat = ragData?.finalStat ?? ''
+    const imageUrl = ragData?.imageUrl ?? '/Advance.webp'
 
-    const { totalScroll } = useScrollHijack(true, () => {
-        // Calculate progress: max scroll ~2400px
-        const progress = Math.min(100, (totalScroll / 2400) * 100)
-        const lineCount = Math.floor((progress / 100) * terminalOutput.length)
-        const nodeCount = Math.floor((progress / 100) * nodes.length)
-        const edgeCount = Math.floor((progress / 100) * edges.length)
-
-        setTerminalLines(lineCount)
-        setNodeBuiltCount(nodeCount)
-        setEdgeBuiltCount(edgeCount)
-    })
+    const { containerRef, totalScroll } = useScrollHijack(Boolean(ragData))
+    const progress = Math.min(100, (totalScroll / 2400) * 100)
+    const terminalLineCount = Math.floor((progress / 100) * terminalOutput.length)
+    const nodeCount = Math.floor((progress / 100) * nodes.length)
+    const edgeCount = Math.floor((progress / 100) * edges.length)
 
     useEffect(() => {
         setCurrentProject(2)
-        const progress = Math.min(100, (totalScroll / 2400) * 100)
         setProjectProgress(progress)
-    }, [totalScroll, setCurrentProject, setProjectProgress])
+    }, [progress, setCurrentProject, setProjectProgress])
+
+    if (!ragData) {
+        return <div>RAG project data not found</div>
+    }
 
     return (
         <section
             ref={containerRef}
             className="rag"
-            aria-label="RAG project showcase"
+            aria-label="RAG Terminal Theater Split Screen - Scroll to reveal terminal output and architecture graph"
+            role="region"
             style={{
                 minHeight: '100vh',
                 position: 'relative',
@@ -81,7 +81,7 @@ export default function SelectedWorkRAG() {
 
                 {/* Terminal lines */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    {terminalOutput.slice(0, terminalLines).map((line, i) => (
+                    {terminalOutput.slice(0, terminalLineCount).map((line, i) => (
                         <div
                             key={i}
                             style={{
@@ -129,7 +129,7 @@ export default function SelectedWorkRAG() {
                     preserveAspectRatio="xMidYMid meet"
                 >
                     {/* Draw edges */}
-                    {edges.slice(0, edgeBuiltCount).map((edge, i) => {
+                    {edges.slice(0, edgeCount).map((edge, i) => {
                         const fromNode = nodes.find(n => n.id === edge.from)
                         const toNode = nodes.find(n => n.id === edge.to)
                         if (!fromNode || !toNode) return null
@@ -161,7 +161,7 @@ export default function SelectedWorkRAG() {
 
                 {/* Node elements */}
                 <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-                    {nodes.slice(0, nodeBuiltCount).map(node => (
+                    {nodes.slice(0, nodeCount).map(node => (
                         <div
                             key={node.id}
                             style={{
@@ -201,7 +201,7 @@ export default function SelectedWorkRAG() {
             </div>
 
             {/* Final stat overlay (shows at end of scroll) */}
-            {nodeBuiltCount === nodes.length && edgeBuiltCount === edges.length && (
+            {nodeCount === nodes.length && edgeCount === edges.length && (
                 <div
                     style={{
                         position: 'fixed',
@@ -228,6 +228,45 @@ export default function SelectedWorkRAG() {
                     </div>
                 </div>
             )}
+
+            {/* Image showcase section */}
+            <div
+                style={{
+                    marginTop: '4rem',
+                    gridColumn: '1 / -1',
+                    borderTop: '1px solid hsl(var(--border))',
+                    paddingTop: '2rem',
+                }}
+            >
+                <div
+                    style={{
+                        marginBottom: '1rem',
+                        fontSize: '0.875rem',
+                        fontFamily: 'var(--font-mono, monospace)',
+                        color: 'hsl(var(--muted-foreground))',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.1em',
+                    }}
+                >
+                    Project Preview
+                </div>
+                <div
+                    style={{
+                        borderRadius: '8px',
+                        overflow: 'hidden',
+                        border: '1px solid hsl(var(--border))',
+                        maxHeight: '400px',
+                    }}
+                >
+                    <OptimizedImage
+                        src={imageUrl}
+                        alt="RAG System Architecture"
+                        width={800}
+                        height={600}
+                        objectFit="cover"
+                    />
+                </div>
+            </div>
         </section>
     )
 }

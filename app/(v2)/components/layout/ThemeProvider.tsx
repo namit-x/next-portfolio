@@ -1,5 +1,5 @@
 'use client'
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
+import { createContext, useContext, useState, type ReactNode } from 'react'
 
 type Theme = 'dark' | 'light'
 interface ThemeCtxValue { theme: Theme; toggle: () => void }
@@ -14,12 +14,12 @@ export default function ThemeProvider({
   children: ReactNode
   fontClasses: string
 }) {
-  const [theme, setTheme] = useState<Theme>('dark')
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window === 'undefined') return 'dark'
 
-  useEffect(() => {
-    const saved = localStorage.getItem('pf-v2-theme') as Theme | null
-    if (saved === 'dark' || saved === 'light') setTheme(saved)
-  }, [])
+    const saved = localStorage.getItem('pf-v2-theme')
+    return saved === 'light' || saved === 'dark' ? saved : 'dark'
+  })
 
   function toggle() {
     setTheme(prev => {

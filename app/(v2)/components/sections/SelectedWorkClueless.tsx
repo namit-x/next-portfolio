@@ -4,40 +4,36 @@ import { useRef, useState, useEffect } from 'react'
 import { useScrollHijack } from '../../hooks/useScrollHijack'
 import { useScrollContext } from '../../context/ScrollContext'
 import { PROJECTS } from '../../data/projects'
+import { OptimizedImage } from '../ui/OptimizedImage'
 import gsap from 'gsap'
 
 /**
  * Clueless: Blueprint Three-Column Room
  * Left: Technical spec sheet with ticks
- * Center: Architecture diagram with idle-wobble + scroll-pulse
- * Right: Decision entries with internal scroll + click interactions
+ * Center: Architecture diagram with scroll-pulse
+ * Right: Decision entries with click interactions
  */
 export default function SelectedWorkClueless() {
-    const containerRef = useRef<HTMLDivElement>(null)
     const centerRef = useRef<HTMLDivElement>(null)
     const rightRailRef = useRef<HTMLDivElement>(null)
 
     const [selectedNode, setSelectedNode] = useState<string | null>(null)
-
-
     const { setCurrentProject, setProjectProgress } = useScrollContext()
-    const cluelessProject = PROJECTS.find(p => p.type === 'clueless')!
-    const { nodes, edges, decisions, tags } = cluelessProject.cluelessData!
-
-    const { totalScroll } = useScrollHijack(true, () => {
-        // Calculate progress: max scroll ~2400px
-        const progress = Math.min(100, (totalScroll / 2400) * 100)
-        setPulsePhase(progress)
-        if (progress > 90) {
-            setIsComplete(true)
-        }
-    })
+    const cluelessProject = PROJECTS.find(p => p.type === 'clueless')
+    const cluelessData = cluelessProject?.cluelessData
+    const nodes = cluelessData?.nodes ?? []
+    const edges = cluelessData?.edges ?? []
+    const decisions = cluelessData?.decisions ?? []
+    const tags = cluelessData?.tags ?? []
+    const imageUrl = cluelessData?.imageUrl ?? '/Shoporia.webp'
+    const { containerRef, totalScroll } = useScrollHijack(Boolean(cluelessData))
+    const progress = Math.min(100, (totalScroll / 2400) * 100)
+    const isComplete = progress > 90
 
     useEffect(() => {
         setCurrentProject(3)
-        const progress = Math.min(100, (totalScroll / 2400) * 100)
         setProjectProgress(progress)
-    }, [totalScroll, setCurrentProject, setProjectProgress])
+    }, [progress, setCurrentProject, setProjectProgress])
 
     // Exit animation on completion
     useEffect(() => {
@@ -77,11 +73,16 @@ export default function SelectedWorkClueless() {
         }
     }, [isComplete])
 
+    if (!cluelessData) {
+        return <div>Clueless project data not found</div>
+    }
+
     return (
         <section
             ref={containerRef}
             className="clueless"
-            aria-label="Clueless project showcase"
+            aria-label="Clueless Blueprint Room - Interactive architecture diagram with decision entries"
+            role="region"
             style={{
                 minHeight: '100vh',
                 position: 'relative',
@@ -106,10 +107,10 @@ export default function SelectedWorkClueless() {
                 {/* Title section */}
                 <div>
                     <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                        {cluelessProject.cluelessData?.title}
+                        {cluelessData.title}
                     </div>
                     <div style={{ fontSize: '0.65rem', opacity: 0.6, marginTop: '0.5rem' }}>
-                        {cluelessProject.cluelessData?.year}
+                        {cluelessData.year}
                     </div>
                 </div>
 
@@ -131,7 +132,7 @@ export default function SelectedWorkClueless() {
 
                 {/* Tags */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    {tags.map(tag => (
+                    {tags && tags.map(tag => (
                         <div
                             key={tag}
                             style={{
@@ -176,7 +177,7 @@ export default function SelectedWorkClueless() {
                     preserveAspectRatio="xMidYMid meet"
                 >
                     {/* Edges */}
-                    {edges.map((edge, i) => {
+                    {edges && edges.map((edge, i) => {
                         const fromNode = nodes.find(n => n.id === edge.from)
                         const toNode = nodes.find(n => n.id === edge.to)
                         if (!fromNode || !toNode) return null
@@ -204,7 +205,7 @@ export default function SelectedWorkClueless() {
                     })}
 
                     {/* Nodes */}
-                    {nodes.map(node => (
+                    {nodes && nodes.map(node => (
                         <circle
                             key={node.id}
                             data-node={node.id}
@@ -233,7 +234,7 @@ export default function SelectedWorkClueless() {
 
                 {/* Node labels overlay */}
                 <div style={{ position: 'relative', width: '100%', height: '100%', pointerEvents: 'none' }}>
-                    {nodes.map(node => (
+                    {nodes && nodes.map(node => (
                         <div
                             key={`label-${node.id}`}
                             style={{
@@ -272,7 +273,7 @@ export default function SelectedWorkClueless() {
                     paddingRight: '1rem',
                 }}
             >
-                {decisions.map(decision => {
+                {decisions && decisions.map(decision => {
                     const isHighlighted = selectedNode === decision.nodeId
                     return (
                         <div
@@ -338,6 +339,45 @@ export default function SelectedWorkClueless() {
                     }}
                 >
                     Architecture validated under load
+                </div>
+            </div>
+
+            {/* Full-width image section */}
+            <div
+                style={{
+                    gridColumn: '1 / -1',
+                    marginTop: '4rem',
+                    borderTop: '1px solid hsl(var(--border))',
+                    paddingTop: '2rem',
+                }}
+            >
+                <div
+                    style={{
+                        marginBottom: '1rem',
+                        fontSize: '0.875rem',
+                        fontFamily: 'var(--font-mono, monospace)',
+                        color: 'hsl(var(--muted-foreground))',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.1em',
+                    }}
+                >
+                    Game Interface
+                </div>
+                <div
+                    style={{
+                        borderRadius: '8px',
+                        overflow: 'hidden',
+                        border: '1px solid hsl(var(--border))',
+                        maxHeight: '400px',
+                    }}
+                >
+                    <OptimizedImage
+                        src={imageUrl}
+                        alt="Clueless Multiplayer Game"
+                        width={800}
+                        height={600}
+                        objectFit="cover"
+                    />
                 </div>
             </div>
         </section>

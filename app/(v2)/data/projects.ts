@@ -51,6 +51,7 @@ export interface ProjectData {
         clientType: string
         year: string
         beforeSentence: string
+        imageUrl: string
         hotspots: ProjectHotspot[]
         stats: ProjectStats[]
     }
@@ -61,6 +62,7 @@ export interface ProjectData {
             type: 'command' | 'output' | 'comment'
             text: string
         }>
+        imageUrl: string
         nodes: RAGNode[]
         edges: RAGEdge[]
         finalStat: string
@@ -72,6 +74,7 @@ export interface ProjectData {
         role: string
         year: string
         status: string
+        imageUrl: string
         tags: string[]
         nodes: RAGNode[] // reusing node structure for architecture
         edges: RAGEdge[]
@@ -110,6 +113,7 @@ export const PROJECTS: ProjectData[] = [
             clientType: 'Healthcare Tech',
             year: '2024',
             beforeSentence: 'Spreadsheets → production in 3 weeks.',
+            imageUrl: '/Vesta.webp',
             hotspots: [
                 {
                     label: 'Role-based Auth',
@@ -171,6 +175,7 @@ export const PROJECTS: ProjectData[] = [
                     text: '─ answer traced to 3 source chunks ─',
                 },
             ],
+            imageUrl: '/Advance.webp',
             nodes: [
                 { id: 'query', label: 'Query', type: 'query', x: 10, y: 50 },
                 { id: 'embed', label: 'Embed', type: 'embed', x: 25, y: 30 },
@@ -232,6 +237,7 @@ export const PROJECTS: ProjectData[] = [
             role: 'Full-Stack Engineer',
             year: '2024',
             status: 'In Production',
+            imageUrl: '/Shoporia.webp',
             tags: ['GraphQL', 'WebSockets', 'Redis'],
             nodes: [
                 { id: 'client', label: 'Client', type: 'query', x: 10, y: 50 },

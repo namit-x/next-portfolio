@@ -40,15 +40,19 @@ export function useScrollHijack(
             lastWheelTimeRef.current = now
 
             setScrollDelta(deltaY)
-            setTotalScroll(prev => prev + deltaY)
+            setTotalScroll(prev => {
+                const nextTotalScroll = prev + deltaY
 
-            onScrollChange?.({
-                isActive: true,
-                scrollDelta: deltaY,
-                totalScroll: totalScroll + deltaY,
+                onScrollChange?.({
+                    isActive: true,
+                    scrollDelta: deltaY,
+                    totalScroll: nextTotalScroll,
+                })
+
+                return nextTotalScroll
             })
         },
-        [enabled, isActive, totalScroll, onScrollChange]
+        [enabled, isActive, onScrollChange]
     )
 
     // Detect when hijack section is in view

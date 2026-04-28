@@ -1,8 +1,10 @@
 'use client'
 
-import { useRef, useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useScrollHijack } from '../../hooks/useScrollHijack'
 import { useScrollContext } from '../../context/ScrollContext'
+import { PROJECTS } from '../../data/projects'
+import { OptimizedImage } from '../ui/OptimizedImage'
 
 /**
  * Vesta: Horizontal Pan Cinema
@@ -10,17 +12,33 @@ import { useScrollContext } from '../../context/ScrollContext'
  * Each panel reveals different story: title → before → dashboard → result
  */
 export default function SelectedWorkVesta() {
-    const panelContainerRef = useRef<HTMLDivElement>(null)
     const [panX, setPanX] = useState(0)
     const [hoveredHotspot, setHoveredHotspot] = useState<string | null>(null)
     const { setCurrentProject, setProjectProgress } = useScrollContext()
 
-    const { totalScroll } = useScrollHijack(true, (state) => {
+    // Safely get vesta project data with fallbacks at every level
+    const vestaProject = PROJECTS?.find(p => p?.type === 'vesta')
+    const vestaData = vestaProject?.vestaData
+    const imageUrl = vestaData?.imageUrl || '/Vesta.webp'
+
+    // CRITICAL FIX: Ensure arrays are always valid, even during SSR/hydration
+    const hotspots = vestaData?.hotspots && Array.isArray(vestaData.hotspots)
+        ? vestaData.hotspots
+        : []
+    const stats = vestaData?.stats && Array.isArray(vestaData.stats)
+        ? vestaData.stats
+        : []
+
+    const { containerRef, totalScroll } = useScrollHijack(Boolean(vestaData), (state) => {
         // Convert vertical scroll to horizontal pan
         // 1px vertical = 0.5px horizontal (adjust sensitivity)
         const newPanX = Math.max(0, Math.min(state.totalScroll * 0.5, 300 * 4 - 100))
         setPanX(newPanX)
     })
+
+    console.log('Vesta data:', stats)
+    console.log('Vesta data:', hotspots)
+
 
     useEffect(() => {
         // Max scroll range for Vesta ≈ 1200px of content
@@ -29,39 +47,14 @@ export default function SelectedWorkVesta() {
         setProjectProgress(progress)
     }, [totalScroll, setCurrentProject, setProjectProgress])
 
-    const hotspots = [
-        {
-            id: 'auth',
-            label: 'Role-based Auth',
-            x: 30,
-            y: 40,
-            subLabel: 'Multi-level access',
-        },
-        {
-            id: 'search',
-            label: 'Patient Search',
-            x: 60,
-            y: 50,
-            subLabel: 'Real-time indexed',
-        },
-        {
-            id: 'reports',
-            label: 'PDF Reports',
-            x: 50,
-            y: 65,
-            subLabel: 'Auto-generated',
-        },
-    ]
-
-    const stats = [
-        { label: 'Faster', value: '70%' },
-        { label: 'Records', value: '2,400' },
-        { label: 'Load time', value: '0.9s' },
-    ]
+    // Early return if vestaData is not available
+    if (!vestaData) {
+        return <div>Vesta project data not found</div>
+    }
 
     return (
         <section
-            ref={panelContainerRef}
+            ref={containerRef}
             className="vesta"
             aria-label="Vesta project showcase"
             style={{
@@ -167,27 +160,27 @@ export default function SelectedWorkVesta() {
                     <div
                         style={{
                             width: '60vw',
+                            maxWidth: '600px',
                             height: '50vh',
-                            background: 'hsl(var(--muted) / 0.3)',
-                            border: '1px solid hsl(var(--border))',
+                            maxHeight: '500px',
                             borderRadius: '8px',
                             transform: 'rotateX(10deg) rotateZ(-15deg)',
                             position: 'relative',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: 'hsl(var(--muted-foreground))',
-                            fontSize: '0.875rem',
-                            fontFamily: 'var(--font-mono, monospace)',
+                            overflow: 'hidden',
                         }}
                     >
-                        Dashboard UI Mockup
-                        {/* Hotspots */}
-                        {hotspots.map(hotspot => (
+                        <OptimizedImage
+                            src={imageUrl}
+                            alt="Vesta Healthcare Dashboard"
+                            width={600}
+                            height={500}
+                            objectFit="cover"
+                        />
+                        {/* Hotspots - now safe with guaranteed array */}
+                        {hotspots.length > 0 && hotspots.map((hotspot, index) => (
                             <div
-                                key={hotspot.id}
-                                className={`vesta__hotspot ${hoveredHotspot === hotspot.id ? 'active' : ''
-                                    }`}
+                                key={`${hotspot.label}-${index}`}
+                                className={`vesta__hotspot ${hoveredHotspot === hotspot.label ? 'active' : ''}`}
                                 style={{
                                     position: 'absolute',
                                     left: `${hotspot.x}%`,
@@ -203,7 +196,7 @@ export default function SelectedWorkVesta() {
                                     animation: 'vesta__pulse 2s ease-in-out infinite',
                                     transition: 'all 0.3s ease',
                                 }}
-                                onMouseEnter={() => setHoveredHotspot(hotspot.id)}
+                                onMouseEnter={() => setHoveredHotspot(hotspot.label)}
                                 onMouseLeave={() => setHoveredHotspot(null)}
                             >
                                 <span
@@ -214,7 +207,7 @@ export default function SelectedWorkVesta() {
                                         borderRadius: '50%',
                                     }}
                                 />
-                                {hoveredHotspot === hotspot.id && (
+                                {hoveredHotspot === hotspot.label && (
                                     <div
                                         style={{
                                             position: 'absolute',
@@ -240,40 +233,42 @@ export default function SelectedWorkVesta() {
                         ))}
                     </div>
 
-                    {/* Impact stats below */}
-                    <div
-                        style={{
-                            marginTop: '2rem',
-                            display: 'flex',
-                            gap: '2rem',
-                            fontFamily: 'var(--font-mono, monospace)',
-                            fontSize: '0.875rem',
-                        }}
-                    >
-                        {stats.map(stat => (
-                            <div
-                                key={stat.label}
-                                style={{
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'center',
-                                }}
-                            >
+                    {/* Impact stats below - now safe with guaranteed array */}
+                    {stats.length > 0 && (
+                        <div
+                            style={{
+                                marginTop: '2rem',
+                                display: 'flex',
+                                gap: '2rem',
+                                fontFamily: 'var(--font-mono, monospace)',
+                                fontSize: '0.875rem',
+                            }}
+                        >
+                            {stats.map(stat => (
                                 <div
+                                    key={stat.label}
                                     style={{
-                                        fontSize: '1.5rem',
-                                        fontWeight: 700,
-                                        color: 'hsl(var(--primary))',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
                                     }}
                                 >
-                                    {stat.value}
+                                    <div
+                                        style={{
+                                            fontSize: '1.5rem',
+                                            fontWeight: 700,
+                                            color: 'hsl(var(--primary))',
+                                        }}
+                                    >
+                                        {stat.value}
+                                    </div>
+                                    <div style={{ color: 'hsl(var(--muted-foreground))' }}>
+                                        {stat.label}
+                                    </div>
                                 </div>
-                                <div style={{ color: 'hsl(var(--muted-foreground))' }}>
-                                    {stat.label}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* Panel D: Browser card result */}
