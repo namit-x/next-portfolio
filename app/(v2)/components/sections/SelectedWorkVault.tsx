@@ -2,8 +2,6 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import gsap from 'gsap'
-import { useTheme } from '../layout/ThemeProvider'
-import { resolveThemeHsl } from '../../utils/resolveThemeHsl'
 
 /**
  * Entry Animation: "The Vault"
@@ -16,22 +14,20 @@ export default function SelectedWorkVault() {
     const gridRef = useRef<HTMLDivElement>(null)
     const codenamesRef = useRef<HTMLDivElement>(null)
     const [hasAnimated, setHasAnimated] = useState(false)
-    const { theme } = useTheme()
-    const backgroundColor = resolveThemeHsl(
-        '--background',
-        theme === 'dark' ? 'hsl(240 10% 4%)' : 'hsl(240 10% 97%)'
-    )
 
     const animateVault = useCallback(() => {
         if (!backgroundRef.current || !gridRef.current || !codenamesRef.current) {
             return
         }
 
+        const backgroundColor = window.getComputedStyle(backgroundRef.current).backgroundColor
+        backgroundRef.current.style.background = 'none'
+        backgroundRef.current.style.backgroundColor = backgroundColor
         const tl = gsap.timeline()
 
         // 1. Background inverts to black
         tl.to(backgroundRef.current, {
-            background: '#000000',
+            backgroundColor: '#000000',
             duration: 0.8,
             ease: 'power2.inOut',
         })
@@ -89,7 +85,7 @@ export default function SelectedWorkVault() {
         tl.to(
             backgroundRef.current,
             {
-                background: backgroundColor,
+                backgroundColor,
                 duration: 0.6,
                 ease: 'power2.inOut',
             },
@@ -107,7 +103,7 @@ export default function SelectedWorkVault() {
             },
             '<'
         )
-    }, [backgroundColor])
+    }, [])
 
     useEffect(() => {
         if (hasAnimated || !containerRef.current) return
@@ -137,7 +133,7 @@ export default function SelectedWorkVault() {
                 style={{
                     position: 'absolute',
                     inset: 0,
-                    background: backgroundColor,
+                    background: 'hsl(var(--background))',
                     transition: 'none',
                     zIndex: 1,
                 }}

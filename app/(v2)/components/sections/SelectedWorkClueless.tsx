@@ -5,8 +5,6 @@ import { useScrollHijack } from '../../hooks/useScrollHijack'
 import { useScrollContext } from '../../context/ScrollContext'
 import { PROJECTS } from '../../data/projects'
 import { OptimizedImage } from '../ui/OptimizedImage'
-import { useTheme } from '../layout/ThemeProvider'
-import { resolveThemeHsl } from '../../utils/resolveThemeHsl'
 import gsap from 'gsap'
 
 /**
@@ -20,7 +18,6 @@ export default function SelectedWorkClueless() {
     const rightRailRef = useRef<HTMLDivElement>(null)
 
     const [selectedNode, setSelectedNode] = useState<string | null>(null)
-    const { theme } = useTheme()
     const { setCurrentProject, setProjectProgress } = useScrollContext()
     const cluelessProject = PROJECTS?.find(p => p?.type === 'clueless')
     const cluelessData = cluelessProject?.cluelessData
@@ -32,19 +29,7 @@ export default function SelectedWorkClueless() {
     const { containerRef, totalScroll } = useScrollHijack(Boolean(cluelessData))
     const progress = Math.min(100, (totalScroll / 2400) * 100)
     const isComplete = progress > 90
-    const primaryColor = 'hsl(180 100% 50%)'
-    const cardColor = resolveThemeHsl(
-        '--card',
-        theme === 'dark' ? 'hsl(240 10% 7%)' : 'hsl(0 0% 100%)'
-    )
-    const borderColor = resolveThemeHsl(
-        '--border',
-        theme === 'dark' ? 'hsl(240 4% 16%)' : 'hsl(240 6% 90%)'
-    )
-    const borderColorMuted = resolveThemeHsl(
-        '--border',
-        theme === 'dark' ? 'hsla(240 4% 16% / 0.5)' : 'hsla(240 6% 90% / 0.5)'
-    )
+    const primaryColor = '#00ffff'
 
     useEffect(() => {
         setCurrentProject(3)
@@ -55,10 +40,20 @@ export default function SelectedWorkClueless() {
     useEffect(() => {
         if (!isComplete || !centerRef.current) return
 
+        const nodesToAnimate = Array.from(
+            centerRef.current.querySelectorAll<SVGCircleElement>('[data-node]')
+        )
+
+        nodesToAnimate.forEach(node => {
+            const computedStyle = window.getComputedStyle(node)
+            node.setAttribute('fill', computedStyle.fill)
+            node.setAttribute('stroke', computedStyle.stroke)
+        })
+
         const tl = gsap.timeline()
 
         // Light up all nodes
-        tl.to(centerRef.current.querySelectorAll('[data-node]'), {
+        tl.to(nodesToAnimate, {
             fill: primaryColor,
             duration: 0.6,
             stagger: 0.05,
@@ -66,7 +61,7 @@ export default function SelectedWorkClueless() {
 
         // Pulse twice
         tl.to(
-            centerRef.current.querySelectorAll('[data-node]'),
+            nodesToAnimate,
             {
                 r: 8,
                 duration: 0.4,
@@ -88,7 +83,7 @@ export default function SelectedWorkClueless() {
                 '<'
             )
         }
-    }, [borderColor, cardColor, isComplete, primaryColor])
+    }, [isComplete, primaryColor])
 
     if (!cluelessData) {
         return <div>Clueless project data not found</div>
@@ -209,7 +204,7 @@ export default function SelectedWorkClueless() {
                                     stroke={
                                         selectedNode === edge.from || selectedNode === edge.to
                                             ? primaryColor
-                                            : borderColorMuted
+                                            : 'hsl(var(--border) / 0.5)'
                                     }
                                     strokeWidth="0.5"
                                     opacity={
@@ -232,12 +227,12 @@ export default function SelectedWorkClueless() {
                             fill={
                                 selectedNode === node.id
                                     ? primaryColor
-                                    : cardColor
+                                    : 'hsl(var(--card))'
                             }
                             stroke={
                                 selectedNode === node.id
                                     ? primaryColor
-                                    : borderColor
+                                    : 'hsl(var(--border))'
                             }
                             strokeWidth="0.5"
                             style={{
