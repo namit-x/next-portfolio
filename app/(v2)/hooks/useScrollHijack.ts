@@ -15,24 +15,51 @@ export interface ScrollHijackState {
  */
 export function useScrollHijack(
     enabled: boolean = true,
-    onScrollChange?: (state: ScrollHijackState) => void
+    onScrollChange?: (state: ScrollHijackState) => void,
+    maxScroll: number = 2400
 ) {
     const containerRef = useRef<HTMLDivElement>(null)
     const [isActive, setIsActive] = useState(false)
     const [scrollDelta, setScrollDelta] = useState(0)
     const [totalScroll, setTotalScroll] = useState(0)
     const lastWheelTimeRef = useRef(0)
+    const totalScrollRef = useRef(0)
+
+    useEffect(() => {
+        totalScrollRef.current = totalScroll
+    }, [totalScroll])
+
+    const updateActiveState = useCallback(() => {
+        if (!enabled || !containerRef.current || typeof window === 'undefined') {
+            setIsActive(false)
+            return
+        }
+
+        const rect = containerRef.current.getBoundingClientRect()
+        const viewportCenter = window.innerHeight * 0.5
+        const isCenterInsideSection = rect.top <= viewportCenter && rect.bottom >= viewportCenter
+        const sectionIsVisible = rect.bottom > 0 && rect.top < window.innerHeight
+
+        setIsActive(isCenterInsideSection && sectionIsVisible)
+    }, [enabled])
 
     // Wheel event handler
     const handleWheel = useCallback(
         (e: WheelEvent) => {
             if (!enabled || !isActive) return
 
+            const deltaY = e.deltaY
+            const currentScroll = totalScrollRef.current
+            const isTryingToScrollPastTop = deltaY < 0 && currentScroll <= 0
+            const isTryingToScrollPastBottom = deltaY > 0 && currentScroll >= maxScroll
+
+            if (isTryingToScrollPastTop || isTryingToScrollPastBottom) {
+                return
+            }
+
             e.preventDefault()
             e.stopPropagation()
 
-            // Accumulate scroll delta
-            const deltaY = e.deltaY
             const now = Date.now()
 
             // Debounce rapid fires
@@ -41,7 +68,8 @@ export function useScrollHijack(
 
             setScrollDelta(deltaY)
             setTotalScroll(prev => {
-                const nextTotalScroll = prev + deltaY
+                const nextTotalScroll = Math.max(0, Math.min(prev + deltaY, maxScroll))
+                totalScrollRef.current = nextTotalScroll
 
                 onScrollChange?.({
                     isActive: true,
@@ -52,24 +80,21 @@ export function useScrollHijack(
                 return nextTotalScroll
             })
         },
-        [enabled, isActive, onScrollChange]
+        [enabled, isActive, maxScroll, onScrollChange]
     )
 
-    // Detect when hijack section is in view
     useEffect(() => {
-        if (!enabled || !containerRef.current) return
+        if (!enabled) return
 
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                setIsActive(entry.isIntersecting)
-            },
-            { threshold: 0.1 }
-        )
+        updateActiveState()
+        window.addEventListener('scroll', updateActiveState, { passive: true })
+        window.addEventListener('resize', updateActiveState)
 
-        observer.observe(containerRef.current)
-
-        return () => observer.disconnect()
-    }, [enabled])
+        return () => {
+            window.removeEventListener('scroll', updateActiveState)
+            window.removeEventListener('resize', updateActiveState)
+        }
+    }, [enabled, updateActiveState])
 
     // Add/remove wheel listener
     useEffect(() => {
@@ -98,6 +123,9 @@ export function useScrollHijack(
         isActive,
         scrollDelta,
         totalScroll,
-        resetScroll: () => setTotalScroll(0),
+        resetScroll: () => {
+            totalScrollRef.current = 0
+            setTotalScroll(0)
+        },
     }
 }

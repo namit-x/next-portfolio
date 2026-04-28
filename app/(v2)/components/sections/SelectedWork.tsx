@@ -58,9 +58,7 @@ function SelectedWorkContent() {
             <SelectedWorkVault />
 
             {/* Project 01: Vesta — Horizontal Pan Cinema (Phase 3) */}
-            <div className='border-2'>
             <SelectedWorkVesta />
-            </div>
 
             {/* Project 02: RAG — Terminal Theater Split Screen (Phase 4) */}
             <SelectedWorkRAG />

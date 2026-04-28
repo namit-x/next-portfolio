@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useScrollHijack } from '../../hooks/useScrollHijack'
 import { useScrollContext } from '../../context/ScrollContext'
 import { PROJECTS } from '../../data/projects'
@@ -14,30 +14,69 @@ import { OptimizedImage } from '../ui/OptimizedImage'
 export default function SelectedWorkVesta() {
     const [panX, setPanX] = useState(0)
     const [hoveredHotspot, setHoveredHotspot] = useState<string | null>(null)
+    const [maxPanX, setMaxPanX] = useState(0)
     const { setCurrentProject, setProjectProgress } = useScrollContext()
+    const stripRef = useRef<HTMLDivElement>(null)
+    const panelCount = 4
+    const [maxScroll, setMaxScroll] = useState(3600)
 
     // Safely get vesta project data with fallbacks at every level
     const vestaProject = PROJECTS?.find(p => p?.type === 'vesta')
     const vestaData = vestaProject?.vestaData
     const imageUrl = vestaData?.imageUrl || '/Vesta.webp'
+    const clientType = vestaData?.clientType || 'Healthcare Tech'
+    const year = vestaData?.year || '2024'
+    const beforeSentence = vestaData?.beforeSentence || 'Spreadsheets to production in 3 weeks.'
 
     // CRITICAL FIX: Ensure arrays are always valid, even during SSR/hydration
     const hotspots = Array.isArray(vestaData?.hotspots) ? vestaData.hotspots : []
     const stats = Array.isArray(vestaData?.stats) ? vestaData.stats : []
 
+    // Get dynamic scroll distance based on viewport
+    const getScrollDistance = () => {
+        if (typeof window === 'undefined') return 3600
+        return Math.max(2400, Math.min(4800, window.innerHeight * 3.5))
+    }
+
+    // Update maxScroll dynamically on resize
+    useEffect(() => {
+        const updateScrollDistance = () => {
+            const newMaxScroll = getScrollDistance()
+            setMaxScroll(newMaxScroll)  // ✅ Use setMaxScroll here
+        }
+
+        updateScrollDistance()
+        window.addEventListener('resize', updateScrollDistance)
+        return () => window.removeEventListener('resize', updateScrollDistance)
+    }, [])
+
     const { containerRef, totalScroll } = useScrollHijack(Boolean(vestaData), (state) => {
-        // Convert vertical scroll to horizontal pan
-        // 1px vertical = 0.5px horizontal (adjust sensitivity)
-        const newPanX = Math.max(0, Math.min(state.totalScroll * 0.5, 300 * 4 - 100))
+        // FIXED: Check if maxScroll > 0 instead of comparing to 0
+        const scrollDistance = maxScroll > 0 ? maxScroll : 3600
+        const progress = Math.min(1, Math.max(0, state.totalScroll / scrollDistance))
+        const newPanX = progress * maxPanX
         setPanX(newPanX)
-    })
+    }, maxScroll)
+
 
     useEffect(() => {
-        // Max scroll range for Vesta ≈ 1200px of content
-        const progress = Math.min(100, (totalScroll / 2400) * 100)
+        const updateMaxPan = () => {
+            const stripWidth = stripRef.current?.scrollWidth ?? 0
+            const viewportWidth = window.innerWidth
+            setMaxPanX(Math.max(0, stripWidth - viewportWidth))
+        }
+
+        updateMaxPan()
+        window.addEventListener('resize', updateMaxPan)
+
+        return () => window.removeEventListener('resize', updateMaxPan)
+    }, [])
+
+    useEffect(() => {
+        const progress = Math.min(100, (totalScroll / maxScroll) * 100)
         setCurrentProject(1)
         setProjectProgress(progress)
-    }, [totalScroll, setCurrentProject, setProjectProgress])
+    }, [maxScroll, totalScroll, setCurrentProject, setProjectProgress])
 
     // Early return if vestaData is not available
     if (!vestaData) {
@@ -55,17 +94,20 @@ export default function SelectedWorkVesta() {
                 overflow: 'hidden',
                 display: 'flex',
                 alignItems: 'center',
+                justifyContent: 'center',
             }}
         >
             {/* 4-panel horizontal strip */}
             <div
+                ref={stripRef}
                 className="vesta__strip"
                 style={{
                     display: 'flex',
-                    width: 'max(100vw, 100%)',
+                    width: `${panelCount * 100}vw`,
                     minHeight: '100vh',
                     transform: `translateX(-${panX}px)`,
-                    transition: 'transform 0.1s ease-out',
+                    transition: 'transform 0.12s ease-out',
+                    willChange: 'transform',
                 }}
             >
                 {/* Panel A: VESTA Title */}
@@ -103,7 +145,7 @@ export default function SelectedWorkVesta() {
                             color: 'hsl(var(--muted-foreground))',
                         }}
                     >
-                        <span style={{ fontWeight: 700 }}>Healthcare Tech</span> · 2024
+                        <span style={{ fontWeight: 700 }}>{clientType}</span> · {year}
                     </div>
                 </div>
 
@@ -131,7 +173,7 @@ export default function SelectedWorkVesta() {
                             maxWidth: '30ch',
                         }}
                     >
-                        Spreadsheets &rarr; production in 3 weeks.
+                        {beforeSentence}
                     </p>
                 </div>
 
@@ -146,26 +188,29 @@ export default function SelectedWorkVesta() {
                         alignItems: 'center',
                         padding: 'var(--container-pad)',
                         perspective: '1200px',
+                        gap: '1.5rem',
                     }}
                 >
                     {/* Isometric dashboard mockup */}
                     <div
                         style={{
-                            width: '60vw',
-                            maxWidth: '600px',
-                            height: '50vh',
-                            maxHeight: '500px',
-                            borderRadius: '8px',
-                            transform: 'rotateX(10deg) rotateZ(-15deg)',
+                            width: 'min(72vw, 820px)',
+                            height: 'min(56vh, 560px)',
+                            borderRadius: '18px',
+                            transform: 'rotateX(8deg) rotateZ(-10deg)',
                             position: 'relative',
                             overflow: 'hidden',
+                            boxShadow: '0 32px 80px hsl(240 10% 4% / 0.18)',
+                            border: '1px solid hsl(var(--border))',
+                            background: 'hsl(var(--card))',
                         }}
                     >
                         <OptimizedImage
                             src={imageUrl}
                             alt="Vesta Healthcare Dashboard"
-                            width={600}
-                            height={500}
+                            width={820}
+                            height={560}
+                            sizes="(max-width: 768px) 92vw, 72vw"
                             objectFit="cover"
                         />
                         {/* Hotspots - now safe with guaranteed array */}
@@ -229,9 +274,10 @@ export default function SelectedWorkVesta() {
                     {stats.length > 0 && (
                         <div
                             style={{
-                                marginTop: '2rem',
                                 display: 'flex',
                                 gap: '2rem',
+                                justifyContent: 'center',
+                                flexWrap: 'wrap',
                                 fontFamily: 'var(--font-mono, monospace)',
                                 fontSize: '0.875rem',
                             }}
@@ -279,9 +325,10 @@ export default function SelectedWorkVesta() {
                         style={{
                             background: 'hsl(var(--card))',
                             border: '1px solid hsl(var(--border))',
-                            borderRadius: '8px',
-                            padding: '2rem',
-                            maxWidth: '40rem',
+                            borderRadius: '14px',
+                            padding: '2.5rem',
+                            maxWidth: '42rem',
+                            width: 'min(42rem, 100%)',
                         }}
                     >
                         <div
@@ -334,7 +381,7 @@ export default function SelectedWorkVesta() {
                     pointerEvents: 'none',
                 }}
             >
-                Scroll to explore
+                {Math.round((panX / Math.max(maxPanX, 1)) * 100)}% explored
             </div>
         </section>
     )

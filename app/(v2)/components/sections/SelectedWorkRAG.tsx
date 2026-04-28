@@ -263,6 +263,7 @@ export default function SelectedWorkRAG() {
                         alt="RAG System Architecture"
                         width={800}
                         height={600}
+                        loading="eager"
                         objectFit="cover"
                     />
                 </div>

@@ -10,6 +10,8 @@ interface OptimizedImageProps {
     height?: number
     className?: string
     priority?: boolean
+    loading?: 'lazy' | 'eager'
+    sizes?: string
     objectFit?: 'cover' | 'contain' | 'fill'
 }
 
@@ -24,6 +26,8 @@ export function OptimizedImage({
     height = 600,
     className = '',
     priority = false,
+    loading = 'lazy',
+    sizes = '100vw',
     objectFit = 'cover',
 }: OptimizedImageProps) {
     const [isLoaded, setIsLoaded] = useState(false)
@@ -43,14 +47,14 @@ export function OptimizedImage({
             { rootMargin: '50px' }
         )
 
-        if (containerRef.current && !priority) {
+        if (containerRef.current && !priority && loading !== 'eager') {
             observer.observe(containerRef.current)
         } else {
             setIsLoaded(true)
         }
 
         return () => observer.disconnect()
-    }, [priority])
+    }, [loading, priority])
 
     return (
         <div
@@ -67,6 +71,8 @@ export function OptimizedImage({
                     alt={alt}
                     fill
                     priority={priority}
+                    loading={loading}
+                    sizes={sizes}
                     style={{
                         objectFit,
                         objectPosition: 'center',
