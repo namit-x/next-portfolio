@@ -14,6 +14,7 @@ export default function SelectedWorkVault() {
     const gridRef = useRef<HTMLDivElement>(null)
     const codenamesRef = useRef<HTMLDivElement>(null)
     const [hasAnimated, setHasAnimated] = useState(false)
+    const [isDismissed, setIsDismissed] = useState(false)
 
     const animateVault = useCallback(() => {
         if (!backgroundRef.current || !gridRef.current || !codenamesRef.current) {
@@ -103,10 +104,14 @@ export default function SelectedWorkVault() {
             },
             '<'
         )
+
+        tl.call(() => {
+            setIsDismissed(true)
+        })
     }, [])
 
     useEffect(() => {
-        if (hasAnimated || !containerRef.current) return
+        if (hasAnimated || isDismissed || !containerRef.current) return
 
         // Check if section is in viewport
         const observer = new IntersectionObserver(([entry]) => {
@@ -118,7 +123,11 @@ export default function SelectedWorkVault() {
 
         observer.observe(containerRef.current)
         return () => observer.disconnect()
-    }, [hasAnimated, animateVault])
+    }, [hasAnimated, animateVault, isDismissed])
+
+    if (isDismissed) {
+        return null
+    }
 
     return (
         <div
