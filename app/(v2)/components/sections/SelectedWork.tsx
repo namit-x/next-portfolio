@@ -41,14 +41,14 @@ function SelectedWorkContent() {
         <section
             ref={containerRef}
             id="work"
-            className="selected-work"
+            className="relative w-full overflow-x-hidden"
             aria-labelledby="work-title"
         >
             {/* Section label */}
-            <div className="selected-work__section-label">
-                <span className="selected-work__section-num">03</span>
-                <span className="selected-work__section-name">Selected Work</span>
-                <span className="selected-work__section-tick" aria-hidden="true" />
+            <div className="flex items-center gap-4 font-mono text-sm uppercase tracking-[0.1em] px-[var(--container-pad)] pb-6">
+                <span className="text-base font-bold text-primary">03</span>
+                <span className="text-base font-bold text-foreground">Selected Work</span>
+                <span className="w-1 h-1 rounded-full bg-primary flex-shrink-0" aria-hidden="true" />
             </div>
 
             {/* HUD overlay (fixed) */}

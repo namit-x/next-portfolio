@@ -17,6 +17,8 @@ export default function SelectedWorkVesta() {
     const [maxPanX, setMaxPanX] = useState(0)
     const { setCurrentProject, setProjectProgress } = useScrollContext()
     const stripRef = useRef<HTMLDivElement>(null)
+    const sectionEntryScrollRef = useRef(0)
+    const wasActiveRef = useRef(false)
     const panelCount = 4
     const [maxScroll, setMaxScroll] = useState(3600)
 
@@ -50,14 +52,26 @@ export default function SelectedWorkVesta() {
         return () => window.removeEventListener('resize', updateScrollDistance)
     }, [])
 
-    const { containerRef, totalScroll } = useScrollHijack(Boolean(vestaData), (state) => {
-        // FIXED: Check if maxScroll > 0 instead of comparing to 0
+    const { containerRef, isActive, totalScroll, resetScroll } = useScrollHijack(Boolean(vestaData), (state) => {
         const scrollDistance = maxScroll > 0 ? maxScroll : 3600
-        const progress = Math.min(1, Math.max(0, state.totalScroll / scrollDistance))
+        const relativeScroll = Math.max(0, state.totalScroll - sectionEntryScrollRef.current)
+        const progress = Math.min(1, Math.max(0, relativeScroll / scrollDistance))
         const newPanX = progress * maxPanX
         setPanX(newPanX)
     }, maxScroll)
 
+    useEffect(() => {
+        if (isActive && !wasActiveRef.current) {
+            // Capture scroll position when section becomes active — keep it as baseline
+            sectionEntryScrollRef.current = totalScroll
+            setPanX(0)
+            resetScroll()
+            // ✅ Keep sectionEntryScrollRef.current — don't reset to 0
+            // This ensures all panX calculations are relative to entry point
+        }
+
+        wasActiveRef.current = isActive
+    }, [isActive, resetScroll, totalScroll])
 
     useEffect(() => {
         const updateMaxPan = () => {
@@ -73,7 +87,8 @@ export default function SelectedWorkVesta() {
     }, [])
 
     useEffect(() => {
-        const progress = Math.min(100, (totalScroll / maxScroll) * 100)
+        const relativeScroll = Math.max(0, totalScroll - sectionEntryScrollRef.current)
+        const progress = Math.min(100, (relativeScroll / maxScroll) * 100)
         setCurrentProject(1)
         setProjectProgress(progress)
     }, [maxScroll, totalScroll, setCurrentProject, setProjectProgress])
