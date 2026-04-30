@@ -145,6 +145,45 @@ html {
     transition: color 0.3s;
     font-size: var(--text-base);
     line-height: 1.6;
+    position: relative;
+}
+
+.v2-root::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image: radial-gradient(circle, var(--hero-dot-dark) 1px, transparent 1px);
+    background-size: 20px 20px;
+    opacity: 0.18;
+    z-index: 0;
+}
+
+@media (min-width: 640px) {
+    .v2-root::before {
+        background-size: 24px 24px;
+    }
+}
+
+@media (min-width: 768px) {
+    .v2-root::before {
+        background-size: 28px 28px;
+    }
+}
+
+.v2-root>* {
+    position: relative;
+    z-index: 1;
+}
+
+[data-theme="light"] .v2-root::before {
+    background-image: radial-gradient(circle, var(--hero-dot-dark) 1px, transparent 1px);
+    opacity: 0.18;
+}
+
+[data-theme="dark"] .v2-root::before {
+    background-image: radial-gradient(circle, var(--hero-dot-light) 1px, transparent 1px);
+    opacity: 0.22;
 }
 
 /* ── Utility: centered container ───────────────────────────────────── */

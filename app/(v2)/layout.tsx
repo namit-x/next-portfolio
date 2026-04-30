@@ -25,8 +25,10 @@ export const metadata: Metadata = {
 export default function V2Layout({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider fontClasses={`${syne.variable} ${ibmMono.variable}`}>
-      <Navbar />
-      {children}
+      <div className="relative">
+        <Navbar />
+        <main className="pt-14 sm:pt-16">{children}</main>
+      </div>
     </ThemeProvider>
   )
 }

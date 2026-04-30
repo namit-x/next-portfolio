@@ -4,21 +4,18 @@ import RoleTypewriter from '../hero/RoleTypewriter'
 export default function HeroSection() {
   return (
     <section className="relative min-h-dvh flex flex-col justify-end px-4 pb-16 sm:px-6 sm:pb-12 md:px-12 md:pb-16 overflow-hidden">
-      {/* Dot grid background */}
-      <div
-        className="absolute inset-0 pointer-events-none opacity-45 [background-image:radial-gradient(circle,var(--hero-dot-dark)_1px,transparent_1px)] [background-size:20px_20px] sm:[background-size:24px_24px] md:[background-size:28px_28px] dark:opacity-55 dark:[background-image:radial-gradient(circle,var(--hero-dot-light)_1px,transparent_1px)]"
-        aria-hidden="true"
-      />
-
       {/* Glow effect - repositioned for mobile */}
-      <div
-        className="absolute -bottom-[15%] -left-[15%] w-[120vw] h-[120vw] sm:w-[90vw] sm:h-[90vw] md:w-[70vw] md:h-[70vw] rounded-full pointer-events-none [background:radial-gradient(ellipse_at_center,oklch(0.72_0.17_195_/_0.05)_0%,transparent_70%)] sm:[background:radial-gradient(ellipse_at_center,oklch(0.72_0.17_195_/_0.06)_0%,transparent_68%)] dark:[background:radial-gradient(ellipse_at_center,oklch(0.72_0.17_195_/_0.04)_0%,transparent_65%)]"
-        aria-hidden="true"
-      />
+      <div className="absolute -bottom-[15%] -left-[15%] w-[120vw] h-[120vw] sm:w-[90vw] sm:h-[90vw] md:w-[70vw] md:h-[70vw] rounded-full pointer-events-none [background:radial-gradient(ellipse_at_center,oklch(0.72_0.17_195_/_0.05)_0%,transparent_70%)] sm:[background:radial-gradient(ellipse_at_center,oklch(0.72_0.17_195_/_0.06)_0%,transparent_68%)] dark:[background:radial-gradient(ellipse_at_center,oklch(0.72_0.17_195_/_0.04)_0%,transparent_65%)]"
+        aria-hidden="true" />
 
-      {/* Year label - hidden on mobile */}
+      {/* Year label - vertically written on the right side */}
       <span
-        className="absolute top-1/2 right-4 sm:right-6 md:right-12 -translate-y-1/2 font-mono text-[10px] sm:text-xs uppercase tracking-[0.14em] text-muted-foreground writing-mode-vertical hidden sm:block"
+        className="absolute top-1/2 right-4 sm:right-6 md:right-12 -translate-y-1/2 font-mono text-[10px] sm:text-xs uppercase tracking-[0.14em] text-muted-foreground hidden sm:block"
+        style={{
+          writingMode: 'vertical-rl',
+          transform: 'translateY(-50%)',
+          textOrientation: 'mixed'
+        }}
         aria-hidden="true"
       >
         Est. 2026 · Portfolio
@@ -31,7 +28,7 @@ export default function HeroSection() {
           <span className="relative flex-shrink-0 w-[6px] h-[6px] sm:w-[7px] sm:h-[7px] rounded-full [background:var(--hero-status-green)]" aria-hidden="true">
             <span className="absolute -inset-1.5 rounded-full [background:oklch(0.72_0.22_145_/_0.25)] animate-pulse-custom" />
           </span>
-          <span>Available for freelance</span>
+          <span>Active</span>
         </div>
 
         {/* Name heading */}
