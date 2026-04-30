@@ -28,10 +28,19 @@ module.exports = {
             opacity: '0',
           },
         },
+        'fade-in': {
+          '0%': {
+            opacity: '0',
+          },
+          '100%': {
+            opacity: '1',
+          },
+        },
       },
       animation: {
         'pulse-custom': 'pulse-custom 2.4s ease-in-out infinite',
         'blink-custom': 'blink-custom 1.1s step-end infinite',
+        'fade-in': 'fade-in 0.6s ease-out forwards',
       },
       /* Color utilities using CSS variables */
       colors: {

@@ -23,8 +23,8 @@ export default function SelectedWorkHUD() {
                     <div
                         key={num}
                         className={`text-sm font-semibold uppercase tracking-[0.1em] transition-colors duration-300 ${currentProject === num
-                                ? 'text-primary'
-                                : 'text-muted-foreground/50'
+                            ? 'text-primary'
+                            : 'text-muted-foreground/50'
                             }`}
                     >
                         {String(num).padStart(2, '0')}
@@ -41,8 +41,8 @@ export default function SelectedWorkHUD() {
                         <div
                             key={tick}
                             className={`w-px transition-all duration-300 ${isActive
-                                    ? 'h-6 bg-primary shadow-[0_0_8px_hsl(var(--primary)_/_0.5)]'
-                                    : 'h-4 bg-muted-foreground/30'
+                                ? 'h-6 bg-primary shadow-[0_0_8px_hsl(var(--primary)_/_0.5)]'
+                                : 'h-4 bg-muted-foreground/30'
                                 }`}
                         />
                     )
