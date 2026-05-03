@@ -19,7 +19,7 @@ export default function HeroSection() {
         aria-hidden="true"
       >
         Est. 2026 · Portfolio
-      </span>
+      </span>z
 
       {/* Main content */}
       <div className="relative z-10 flex flex-col gap-4 sm:gap-5 md:gap-7 max-w-full">
