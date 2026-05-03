@@ -5,6 +5,8 @@ type Fact = {
   accent?: boolean
 }
 
+import CyanMorphButton from '../ui/CyanMorphButton'
+
 const TECH_STACK = [
   'React.js',
   'Node.js',
@@ -49,7 +51,7 @@ export default function AboutSection() {
       {/* Section label */}
       <div className="px-3 sm:px-4 md:px-6 lg:px-[var(--container-pad)] mb-8 sm:mb-10 md:mb-12 animate-fade-in">
         <div className="flex items-center gap-3 sm:gap-4 font-mono text-xs sm:text-sm uppercase tracking-[0.1em]">
-          <span className="text-sm sm:text-base font-bold text-primary">02</span>
+          <span className="text-sm sm:text-base font-bold text-primary">03</span>
           <span className="text-sm sm:text-base font-bold text-foreground">About</span>
           <span
             className="w-1 h-1 rounded-full [background:hsl(var(--primary))] flex-shrink-0"
@@ -119,12 +121,11 @@ export default function AboutSection() {
 
         {/* Bottom bar */}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center justify-between mt-8 sm:mt-10 md:mt-12 pt-6 sm:pt-8 border-t border-border animate-fade-in" style={{ animationDelay: '500ms' }}>
-          <a
+          <CyanMorphButton
+            text="Get in touch"
             href="#contact"
-            className="inline-flex items-center gap-2 sm:gap-2.5 py-2.5 sm:py-3 px-4 sm:px-5 border border-border rounded-[2px] font-mono text-[11px] sm:text-xs uppercase tracking-[0.08em] text-foreground transition-all hover:border-[var(--hero-accent-line)] hover:text-[var(--hero-accent)] hover:[background:var(--hero-accent-dim)] hover:scale-105"
-          >
-            Get in touch <span className="transition-transform group-hover:translate-x-1">→</span>
-          </a>
+            ariaLabel="Navigate to contact section"
+          />
           <span className="font-mono text-[10px] sm:text-[11px] md:text-xs uppercase tracking-[0.1em] text-muted-foreground/75 whitespace-nowrap">
             Bengaluru · self-taught since 2022
           </span>
