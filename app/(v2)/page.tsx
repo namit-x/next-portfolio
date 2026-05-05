@@ -6,8 +6,8 @@ export default function V2Page() {
   return (
     <main>
       <HeroSection />
-      <ProjectsSection />
       <AboutSection />
+      <ProjectsSection />
     </main>
   )
 }
