@@ -121,8 +121,7 @@ export default function AboutSection() {
 
         {/* Bottom bar */}
         <div
-          id="contact"
-          className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center justify-between mt-8 sm:mt-10 md:mt-12 pt-6 sm:pt-8 border-t border-border animate-fade-in scroll-mt-24"
+          className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center justify-between mt-8 sm:mt-10 md:mt-12 pt-6 sm:pt-8 border-t border-border animate-fade-in"
           style={{ animationDelay: '500ms' }}
         >
           <CyanMorphButton

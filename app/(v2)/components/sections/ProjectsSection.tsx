@@ -72,6 +72,8 @@ export default function ProjectsSection() {
   const [isHovered, setIsHovered] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
+  const dragStartXRef = useRef(0)
+  const dragScrollLeftRef = useRef(0)
 
   const scrollSpeed = 1.2
 
@@ -161,24 +163,20 @@ export default function ProjectsSection() {
     return () => container.removeEventListener('scroll', updateCurrentIndex)
   }, [updateCurrentIndex])
 
-  // 🖱 DRAG SUPPORT
-  let startX = 0
-  let scrollLeft = 0
-
   const onMouseDown = (e: React.MouseEvent) => {
     const container = containerRef.current
     if (!container) return
 
     setIsDragging(true)
-    startX = e.pageX
-    scrollLeft = container.scrollLeft
+    dragStartXRef.current = e.pageX
+    dragScrollLeftRef.current = container.scrollLeft
   }
 
   const onMouseMove = (e: React.MouseEvent) => {
     if (!isDragging || !containerRef.current) return
     e.preventDefault()
-    const walk = (e.pageX - startX) * 1.5
-    containerRef.current.scrollLeft = scrollLeft - walk
+    const walk = (e.pageX - dragStartXRef.current) * 1.5
+    containerRef.current.scrollLeft = dragScrollLeftRef.current - walk
     // Update index while dragging
     updateCurrentIndex()
   }
