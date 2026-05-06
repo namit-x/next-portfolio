@@ -1,7 +1,7 @@
 export default function ScrollHint() {
   return (
     <div
-      className="absolute right-3 sm:right-6 md:right-12 bottom-6 sm:bottom-8 md:bottom-10 flex flex-col items-center gap-2 md:gap-3 z-10 hidden md:flex"
+      className="absolute right-3 sm:right-6 md:right-12 bottom-6 sm:bottom-8 md:bottom-10 flex flex-col items-center gap-2 md:gap-3 z-10 md:flex"
       aria-hidden="true"
     >
       <span className="text-[9px] md:text-xs font-mono uppercase tracking-[0.12em] text-muted-foreground [writing-mode:vertical-rl]">

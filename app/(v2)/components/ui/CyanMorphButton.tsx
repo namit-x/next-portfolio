@@ -1,96 +1,66 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
+import { ArrowRight } from 'lucide-react'
 
 interface CyanMorphButtonProps {
-    text: string
-    href?: string
-    onClick?: () => void
-    ariaLabel?: string
-    icon?: React.ReactNode
+  text: string
+  href?: string
+  onClick?: () => void
+  ariaLabel?: string
+  icon?: React.ReactNode
+}
+
+const rootClassName =
+  'group relative inline-flex h-11 w-fit max-w-max flex-none self-start items-center gap-4 overflow-hidden rounded-full bg-transparent pl-5 pr-1 text-left select-none whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06e0ff]/45 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent'
+
+function ButtonContent({ text, icon }: Pick<CyanMorphButtonProps, 'text' | 'icon'>) {
+  return (
+    <>
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-y-0 right-0 w-11 rounded-full bg-[#06e0ff] shadow-[0_10px_30px_rgba(6,224,255,0.22)] transition-[width,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:w-full group-hover:shadow-[0_18px_42px_rgba(6,224,255,0.28)] group-focus-visible:w-full group-focus-visible:shadow-[0_18px_42px_rgba(6,224,255,0.28)]"
+      />
+
+      <span className="relative z-10 pl-1 text-sm font-semibold tracking-wide text-[#ccf4ff] transition-colors duration-300 ease-out group-hover:text-[#06212e] group-focus-visible:text-[#06212e] sm:text-base">
+        {text}
+      </span>
+
+      <span className="relative z-10 flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-[#06212e] -mr-0.5">
+        {icon || (
+          <ArrowRight
+            className="h-5 w-5 transition-transform duration-300 ease-out group-hover:translate-x-0.5 group-focus-visible:translate-x-0.5"
+            aria-hidden="true"
+          />
+        )}
+      </span>
+    </>
+  )
 }
 
 export default function CyanMorphButton({
-    text,
-    href,
-    onClick,
-    ariaLabel,
-    icon,
+  text,
+  href,
+  onClick,
+  ariaLabel,
+  icon,
 }: CyanMorphButtonProps) {
-    const [isHovered, setIsHovered] = useState(false)
-
-    const buttonContent = (
-        <>
-            {/* Button Label - stays above the expanding background */}
-            <span
-                className={`
-          relative z-10 text-sm sm:text-base font-semibold tracking-wide whitespace-nowrap pl-1
-          transition-colors duration-300 ease-in-out
-          ${isHovered ? 'text-[#06212e]' : 'text-[#ccf4ff]'}
-        `}
-            >
-                {text}
-            </span>
-
-            {/* Icon Wrapper - Circle that expands into full rounded rectangle */}
-            <div
-                className={`
-          flex items-center justify-center rounded-full bg-[#06e0ff] text-[#06212e] 
-          shadow-md transition-all duration-500 ease-[cubic-bezier(0.2,0.9,0.4,1.1)]
-          flex-shrink-0
-          ${isHovered
-                        ? 'absolute right-0 top-0 w-full h-full rounded-[60px] shadow-lg shadow-cyan-400/30'
-                        : 'relative w-11 h-11'
-                    }
-        `}
-            >
-                {/* Arrow SVG or Custom Icon */}
-                {icon || (
-                    <svg
-                        className={`
-              w-5 h-5 stroke-current transition-transform duration-300 ease-out
-              ${isHovered ? 'translate-x-1' : ''}
-            `}
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                    >
-                        <path
-                            d="M5 12H19M19 12L12 5M19 12L12 19"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        />
-                    </svg>
-                )}
-            </div>
-        </>
-    )
-
-    if (href) {
-        return (
-            <a
-                href={href}
-                className="relative flex items-center justify-between gap-4 bg-transparent border-none cursor-pointer p-0 w-fit group"
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
-                aria-label={ariaLabel}
-            >
-                {buttonContent}
-            </a>
-        )
-    }
-
+  if (href) {
     return (
-        <button
-            className="relative flex items-center justify-between gap-4 bg-transparent border-none cursor-pointer p-0 w-fit group"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            onClick={onClick}
-            aria-label={ariaLabel}
-        >
-            {buttonContent}
-        </button>
+      <a href={href} className={rootClassName} aria-label={ariaLabel}>
+        <ButtonContent text={text} icon={icon} />
+      </a>
     )
+  }
+
+  return (
+    <button
+      type="button"
+      className={rootClassName}
+      onClick={onClick}
+      aria-label={ariaLabel}
+    >
+      <ButtonContent text={text} icon={icon} />
+    </button>
+  )
 }
