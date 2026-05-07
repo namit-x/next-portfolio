@@ -226,7 +226,7 @@ export default function ProjectsSection() {
     >
       <div className="px-3 sm:px-4 md:px-6 lg:px-[var(--container-pad)] mb-8 sm:mb-10 md:mb-12">
         <div className="flex items-center gap-3 sm:gap-4 font-mono text-xs sm:text-sm uppercase tracking-[0.1em]">
-          <span className="text-sm sm:text-base font-bold text-primary">02</span>
+          <span className="text-sm sm:text-base font-bold text-primary">04</span>
           <span className="text-sm sm:text-base font-bold text-foreground">Work</span>
           <span
             className="w-1 h-1 rounded-full [background:hsl(var(--primary))] flex-shrink-0"

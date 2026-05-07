@@ -51,7 +51,7 @@ export default function AboutSection() {
       {/* Section label */}
       <div className="px-3 sm:px-4 md:px-6 lg:px-[var(--container-pad)] mb-8 sm:mb-10 md:mb-12 animate-fade-in">
         <div className="flex items-center gap-3 sm:gap-4 font-mono text-xs sm:text-sm uppercase tracking-[0.1em]">
-          <span className="text-sm sm:text-base font-bold text-primary">03</span>
+          <span className="text-sm sm:text-base font-bold text-primary">02</span>
           <span className="text-sm sm:text-base font-bold text-foreground">About</span>
           <span
             className="w-1 h-1 rounded-full [background:hsl(var(--primary))] flex-shrink-0"
