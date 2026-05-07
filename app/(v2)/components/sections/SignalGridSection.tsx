@@ -401,11 +401,10 @@ export default function SignalGridSection() {
                 <button
                   type="button"
                   onClick={() => setShowUnified(!showUnified)}
-                  className={`rounded-full border px-3 py-2 font-mono text-[10px] uppercase tracking-[0.1em] transition-all duration-300 ${
-                    showUnified
+                  className={`rounded-full border px-3 py-2 font-mono text-[10px] uppercase tracking-[0.1em] transition-all duration-300 ${showUnified
                       ? 'border-[var(--hero-accent-line)] bg-[var(--hero-accent-dim)] text-[var(--hero-accent)]'
                       : 'border-border text-muted-foreground hover:border-[var(--hero-accent-line)] hover:text-[var(--hero-accent)]'
-                  }`}
+                    }`}
                   aria-label="Toggle consistency view"
                 >
                   {showUnified ? 'Unified' : 'Individual'}
@@ -515,171 +514,171 @@ export default function SignalGridSection() {
               </div>
 
               <div className="mt-8 grid grid-cols-1 gap-5 xl:grid-cols-2">
-            <SignalPanel
-              platform="GitHub"
-              handle={github?.profile.handle ?? '@namit-x'}
-              href={github?.profile.href ?? 'https://github.com/namit-x'}
-              icon={<Terminal className="h-4 w-4" aria-hidden="true" />}
-              tone="cyan"
-            >
-              <div className="grid gap-5 pt-5">
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                  <Metric
-                    label="Active days"
-                    value={formatNumber(github?.stats.activeDays)}
-                    detail="calendar year"
-                  />
-                  <Metric
-                    label="Current streak"
-                    value={github ? `${formatNumber(github.stats.streak)}d` : '...'}
-                    detail="consecutive days"
-                  />
-                  <Metric
-                    label="Followers"
-                    value={formatNumber(github?.stats.followers)}
-                    detail="public profile"
-                  />
-                  <Metric
-                    label="Latest"
-                    value={github?.recent.label ?? '...'}
-                    detail={github?.recent.repo ?? 'waiting for events'}
-                  />
-                </div>
+                <SignalPanel
+                  platform="GitHub"
+                  handle={github?.profile.handle ?? '@namit-x'}
+                  href={github?.profile.href ?? 'https://github.com/namit-x'}
+                  icon={<Terminal className="h-4 w-4" aria-hidden="true" />}
+                  tone="cyan"
+                >
+                  <div className="grid gap-5 pt-5">
+                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                      <Metric
+                        label="Active days"
+                        value={formatNumber(github?.stats.activeDays)}
+                        detail="calendar year"
+                      />
+                      <Metric
+                        label="Current streak"
+                        value={github ? `${formatNumber(github.stats.streak)}d` : '...'}
+                        detail="consecutive days"
+                      />
+                      <Metric
+                        label="Followers"
+                        value={formatNumber(github?.stats.followers)}
+                        detail="public profile"
+                      />
+                      <Metric
+                        label="Latest"
+                        value={github?.recent.label ?? '...'}
+                        detail={github?.recent.repo ?? 'waiting for events'}
+                      />
+                    </div>
 
-                <div>
-                  <div className="mb-3 flex items-end justify-between gap-4">
                     <div>
-                      <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70">
-                        GitHub contribution calendar
-                      </p>
-                      <p className="mt-1 font-mono text-xs text-muted-foreground">
-                        Last 30 weeks from your public GitHub profile.
-                      </p>
+                      <div className="mb-3 flex items-end justify-between gap-4">
+                        <div>
+                          <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70">
+                            GitHub contribution calendar
+                          </p>
+                          <p className="mt-1 font-mono text-xs text-muted-foreground">
+                            Last 30 weeks from your public GitHub profile.
+                          </p>
+                        </div>
+                        <div className="hidden items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground sm:flex">
+                          <span>Low</span>
+                          {[0, 1, 2, 3, 4].map((level) => (
+                            <span
+                              key={level}
+                              className={`h-2.5 w-2.5 rounded-[2px] ${githubLevelClassName[level]}`}
+                            />
+                          ))}
+                          <span>High</span>
+                        </div>
+                      </div>
+                      <CalendarGrid
+                        cells={github?.calendar ?? fallbackCalendar}
+                        label="GitHub contribution calendar"
+                        levelClassName={githubLevelClassName}
+                      />
                     </div>
-                    <div className="hidden items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground sm:flex">
-                      <span>Low</span>
-                      {[0, 1, 2, 3, 4].map((level) => (
-                        <span
-                          key={level}
-                          className={`h-2.5 w-2.5 rounded-[2px] ${githubLevelClassName[level]}`}
-                        />
-                      ))}
-                      <span>High</span>
-                    </div>
-                  </div>
-                  <CalendarGrid
-                    cells={github?.calendar ?? fallbackCalendar}
-                    label="GitHub contribution calendar"
-                    levelClassName={githubLevelClassName}
-                  />
-                </div>
 
-                <div className="grid gap-2 border-t border-border/70 pt-4 sm:grid-cols-[auto_minmax(0,_1fr)] sm:items-center">
-                  <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70">
-                    Recent repos
-                  </span>
-                  <div className="flex flex-wrap gap-2">
-                    {(github?.recent.repos.length ? github.recent.repos : ['namit-x/next-portfolio']).map((repo) => (
-                      <span
-                        key={repo}
-                        className="rounded-full border border-border px-3 py-1 font-mono text-[10px] text-muted-foreground"
-                      >
-                        {repo.replace('namit-x/', '')}
+                    <div className="grid gap-2 border-t border-border/70 pt-4 sm:grid-cols-[auto_minmax(0,_1fr)] sm:items-center">
+                      <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70">
+                        Recent repos
                       </span>
-                    ))}
+                      <div className="flex flex-wrap gap-2">
+                        {(github?.recent.repos.length ? github.recent.repos : ['namit-x/next-portfolio']).map((repo) => (
+                          <span
+                            key={repo}
+                            className="rounded-full border border-border px-3 py-1 font-mono text-[10px] text-muted-foreground"
+                          >
+                            {repo.replace('namit-x/', '')}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            </SignalPanel>
+                </SignalPanel>
 
-            <SignalPanel
-              platform="LeetCode"
-              handle={leetcode?.profile.handle ?? 'namitrana'}
-              href={leetcode?.profile.href ?? 'https://leetcode.com/u/namitrana/'}
-              icon={<Code2 className="h-4 w-4" aria-hidden="true" />}
-              tone="gold"
-            >
-              <div className="grid gap-5 pt-5">
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                  <Metric
-                    label="Solved"
-                    value={formatNumber(leetcode?.stats.solved)}
-                    detail={`${formatNumber(leetcode?.stats.submissions)} submissions`}
-                  />
-                  <Metric
-                    label="Ranking"
-                    value={leetcode?.stats.ranking ? `#${formatNumber(leetcode.stats.ranking)}` : '...'}
-                    detail="global profile rank"
-                  />
-                  <Metric
-                    label="Active days"
-                    value={formatNumber(leetcode?.stats.activeDays)}
-                    detail="calendar activity"
-                  />
-                  <Metric
-                    label="Streak"
-                    value={leetcode ? `${formatNumber(leetcode.stats.streak)}d` : '...'}
-                    detail="from LeetCode calendar"
-                  />
-                </div>
+                <SignalPanel
+                  platform="LeetCode"
+                  handle={leetcode?.profile.handle ?? 'namitrana'}
+                  href={leetcode?.profile.href ?? 'https://leetcode.com/u/namitrana/'}
+                  icon={<Code2 className="h-4 w-4" aria-hidden="true" />}
+                  tone="gold"
+                >
+                  <div className="grid gap-5 pt-5">
+                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                      <Metric
+                        label="Solved"
+                        value={formatNumber(leetcode?.stats.solved)}
+                        detail={`${formatNumber(leetcode?.stats.submissions)} submissions`}
+                      />
+                      <Metric
+                        label="Ranking"
+                        value={leetcode?.stats.ranking ? `#${formatNumber(leetcode.stats.ranking)}` : '...'}
+                        detail="global profile rank"
+                      />
+                      <Metric
+                        label="Active days"
+                        value={formatNumber(leetcode?.stats.activeDays)}
+                        detail="calendar activity"
+                      />
+                      <Metric
+                        label="Streak"
+                        value={leetcode ? `${formatNumber(leetcode.stats.streak)}d` : '...'}
+                        detail="from LeetCode calendar"
+                      />
+                    </div>
 
-                <div className="grid gap-2 border-y border-border/70 py-4 sm:grid-cols-3">
-                  <div>
-                    <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground/70">
-                      Easy
-                    </span>
-                    <span className="mt-1 block font-display text-2xl font-bold leading-none text-foreground">
-                      {formatNumber(leetcode?.stats.easy)}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground/70">
-                      Medium
-                    </span>
-                    <span className="mt-1 block font-display text-2xl font-bold leading-none text-foreground">
-                      {formatNumber(leetcode?.stats.medium)}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground/70">
-                      Hard
-                    </span>
-                    <span className="mt-1 block font-display text-2xl font-bold leading-none text-foreground">
-                      {formatNumber(leetcode?.stats.hard)}
-                    </span>
-                  </div>
-                </div>
+                    <div className="grid gap-2 border-y border-border/70 py-4 sm:grid-cols-3">
+                      <div>
+                        <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground/70">
+                          Easy
+                        </span>
+                        <span className="mt-1 block font-display text-2xl font-bold leading-none text-foreground">
+                          {formatNumber(leetcode?.stats.easy)}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground/70">
+                          Medium
+                        </span>
+                        <span className="mt-1 block font-display text-2xl font-bold leading-none text-foreground">
+                          {formatNumber(leetcode?.stats.medium)}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground/70">
+                          Hard
+                        </span>
+                        <span className="mt-1 block font-display text-2xl font-bold leading-none text-foreground">
+                          {formatNumber(leetcode?.stats.hard)}
+                        </span>
+                      </div>
+                    </div>
 
-                <div>
-                  <div className="mb-3 flex items-end justify-between gap-4">
                     <div>
-                      <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70">
-                        LeetCode submission calendar
-                      </p>
-                      <p className="mt-1 font-mono text-xs text-muted-foreground">
-                        Last 30 weeks from namitrana&apos;s submission heatmap.
-                      </p>
-                    </div>
-                    <div className="hidden items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground sm:flex">
-                      <span>Low</span>
-                      {[0, 1, 2, 3, 4].map((level) => (
-                        <span
-                          key={level}
-                          className={`h-2.5 w-2.5 rounded-[2px] ${leetcodeLevelClassName[level]}`}
-                        />
-                      ))}
-                      <span>High</span>
+                      <div className="mb-3 flex items-end justify-between gap-4">
+                        <div>
+                          <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70">
+                            LeetCode submission calendar
+                          </p>
+                          <p className="mt-1 font-mono text-xs text-muted-foreground">
+                            Last 30 weeks from namitrana&apos;s submission heatmap.
+                          </p>
+                        </div>
+                        <div className="hidden items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground sm:flex">
+                          <span>Low</span>
+                          {[0, 1, 2, 3, 4].map((level) => (
+                            <span
+                              key={level}
+                              className={`h-2.5 w-2.5 rounded-[2px] ${leetcodeLevelClassName[level]}`}
+                            />
+                          ))}
+                          <span>High</span>
+                        </div>
+                      </div>
+                      <CalendarGrid
+                        cells={leetcode?.calendar ?? fallbackCalendar}
+                        label="LeetCode submission calendar"
+                        levelClassName={leetcodeLevelClassName}
+                      />
                     </div>
                   </div>
-                  <CalendarGrid
-                    cells={leetcode?.calendar ?? fallbackCalendar}
-                    label="LeetCode submission calendar"
-                    levelClassName={leetcodeLevelClassName}
-                  />
-                </div>
+                </SignalPanel>
               </div>
-            </SignalPanel>
-          </div>
             </>
           )}
         </div>
