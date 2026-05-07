@@ -3,7 +3,7 @@ import RoleTypewriter from '../hero/RoleTypewriter'
 
 export default function HeroSection() {
   return (
-    <section className="relative min-h-dvh flex flex-col justify-end px-4 pb-16 sm:px-6 sm:pb-12 md:px-12 md:pb-16 overflow-hidden">
+    <section id='#home' className="relative min-h-dvh flex flex-col justify-end px-4 pb-16 sm:px-6 sm:pb-12 md:px-12 md:pb-16 overflow-hidden">
       {/* Glow effect - repositioned for mobile */}
       <div className="absolute -bottom-[15%] -left-[15%] w-[120vw] h-[120vw] sm:w-[90vw] sm:h-[90vw] md:w-[70vw] md:h-[70vw] rounded-full pointer-events-none [background:radial-gradient(ellipse_at_center,oklch(0.72_0.17_195_/_0.05)_0%,transparent_70%)] sm:[background:radial-gradient(ellipse_at_center,oklch(0.72_0.17_195_/_0.06)_0%,transparent_68%)] dark:[background:radial-gradient(ellipse_at_center,oklch(0.72_0.17_195_/_0.04)_0%,transparent_65%)]"
         aria-hidden="true" />
