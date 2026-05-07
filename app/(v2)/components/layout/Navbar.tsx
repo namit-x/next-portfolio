@@ -21,6 +21,7 @@ export interface GooeyNavProps {
 const defaultItems: GooeyNavItem[] = [
   { label: "Home", href: "#home" },
   { label: "About", href: "#about" },
+  { label: "Signal", href: "#signal" },
   { label: "Work", href: "#work" },
   { label: "Contact", href: "#contact" },
 ];
@@ -392,7 +393,7 @@ const GooeyNav: React.FC<GooeyNavProps> = ({
         <nav className="relative flex" style={{ transform: "translate3d(0,0,0.01px)" }}>
           <ul
             ref={navRef}
-            className="relative z-[3] m-0 flex list-none gap-8 p-0 px-4"
+            className="relative z-[3] m-0 flex list-none gap-1 p-0 px-1 text-[12px] sm:gap-5 sm:px-3 sm:text-sm lg:gap-8 lg:px-4"
             style={{
               color: "white",
               textShadow: "0 1px 1px hsl(205deg 30% 10% / 0.2)",
@@ -408,7 +409,7 @@ const GooeyNav: React.FC<GooeyNavProps> = ({
                   href={item.href}
                   onClick={(e) => handleClick(e, index)}
                   onKeyDown={(e) => handleKeyDown(e)}
-                  className="inline-block py-[0.6em] px-[1em] outline-none"
+                  className="inline-block px-[0.72em] py-[0.6em] outline-none sm:px-[0.9em] lg:px-[1em]"
                 >
                   {item.label}
                 </a>
