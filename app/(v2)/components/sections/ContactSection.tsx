@@ -27,25 +27,25 @@ const CONTACT_DETAILS = [
 const SOCIAL_LINKS = [
   {
     label: 'GitHub',
-    handle: '@rnamit099',
+    handle: '@namit-x',
     href: 'https://github.com/namit-x',
     icon: Terminal,
   },
   {
     label: 'LinkedIn',
-    handle: '/in/rnamit099',
+    handle: '/in/namitrana',
     href: 'https://www.linkedin.com/in/namit-raana',
     icon: BriefcaseBusiness,
   },
   {
     label: 'Instagram',
-    handle: '@rnamit099',
+    handle: '@namit.raana',
     href: 'https://www.instagram.com/namit.raana',
     icon: Camera,
   },
   {
     label: 'LeetCode',
-    handle: 'rnamit099',
+    handle: 'namitrana',
     href: 'https://leetcode.com/u/namitrana',
     icon: Code2,
   },
