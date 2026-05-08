@@ -106,7 +106,7 @@ const formatUpdatedAt = (value?: string) => {
 }
 
 const formatDate = (value: string) => {
-  if (value.startsWith('loading')) return 'Loading activity'
+  if (value.startsWith('loading') || value.startsWith('merged')) return 'No data'
 
   return new Intl.DateTimeFormat('en', {
     month: 'short',
@@ -152,6 +152,33 @@ function CalendarGrid({
   )
 }
 
+function UnifiedCalendarGrid({
+  cells,
+  label,
+  levelClassName,
+}: {
+  cells: CalendarCell[]
+  label: string
+  levelClassName: string[]
+}) {
+  return (
+    <div className="overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div
+        className="grid min-w-[42rem] grid-flow-col grid-rows-7 gap-1"
+        aria-label={label}
+      >
+        {cells.map((cell) => (
+          <span
+            key={cell.date}
+            className={`h-3 rounded-[2px] transition-all duration-300 hover:scale-125 hover:ring-1 hover:ring-[var(--hero-accent-line)] ${levelClassName[cell.level] ?? levelClassName[0]}`}
+            title={`${formatDate(cell.date)} · ${cell.count} ${cell.count === 1 ? 'activity' : 'activities'}`}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function mergeCalendars(github: CalendarCell[], leetcode: CalendarCell[]): CalendarCell[] {
   const dateMap = new Map<string, number>()
 
@@ -167,7 +194,8 @@ function mergeCalendars(github: CalendarCell[], leetcode: CalendarCell[]): Calen
     }
   })
 
-  const baseLength = github.length > 0 ? github.length : (leetcode.length > 0 ? leetcode.length : 210)
+  // Use 52 weeks (364 cells) for unified view instead of 30 weeks
+  const extendedLength = 52 * 7
   const allDates = new Set<string>()
   github.forEach((cell) => allDates.add(cell.date))
   leetcode.forEach((cell) => allDates.add(cell.date))
@@ -175,7 +203,7 @@ function mergeCalendars(github: CalendarCell[], leetcode: CalendarCell[]): Calen
   const maxCount = Math.max(...Array.from(dateMap.values()), 1)
   const merged: CalendarCell[] = []
 
-  for (let i = 0; i < baseLength; i++) {
+  for (let i = 0; i < extendedLength; i++) {
     const gitCell = github[i] || { date: `merged-${i}`, count: 0, level: 0 }
     const leeCell = leetcode[i] || { date: `merged-${i}`, count: 0, level: 0 }
 
@@ -402,8 +430,8 @@ export default function SignalGridSection() {
                   type="button"
                   onClick={() => setShowUnified(!showUnified)}
                   className={`rounded-full border px-3 py-2 font-mono text-[10px] uppercase tracking-[0.1em] transition-all duration-300 ${showUnified
-                      ? 'border-[var(--hero-accent-line)] bg-[var(--hero-accent-dim)] text-[var(--hero-accent)]'
-                      : 'border-border text-muted-foreground hover:border-[var(--hero-accent-line)] hover:text-[var(--hero-accent)]'
+                    ? 'border-[var(--hero-accent-line)] bg-[var(--hero-accent-dim)] text-[var(--hero-accent)]'
+                    : 'border-border text-muted-foreground hover:border-[var(--hero-accent-line)] hover:text-[var(--hero-accent)]'
                     }`}
                   aria-label="Toggle consistency view"
                 >
@@ -421,7 +449,7 @@ export default function SignalGridSection() {
 
           {showUnified && signal ? (
             <div className="mt-8 animate-fade-in">
-              <article className="group relative overflow-hidden rounded-[10px] border border-border [background:linear-gradient(135deg,hsl(var(--card)/0.64),hsl(var(--background)/0.34))] p-4 backdrop-blur-sm transition-all duration-300 hover:border-[var(--hero-accent-line)] sm:p-5 lg:p-6">
+              <article className="group relative min-h-[34rem] overflow-hidden rounded-[10px] border border-border [background:linear-gradient(135deg,hsl(var(--card)/0.64),hsl(var(--background)/0.34))] p-4 backdrop-blur-sm transition-all duration-300 hover:border-[var(--hero-accent-line)] sm:p-5 lg:p-6">
                 <div
                   className="absolute inset-x-0 top-0 h-36 [background:linear-gradient(180deg,var(--hero-accent-dim),transparent)] opacity-60"
                   aria-hidden="true"
@@ -453,7 +481,7 @@ export default function SignalGridSection() {
                     Combined activity from both platforms. Darker shades indicate more coding consistency and productivity across the calendar year.
                   </p>
 
-                  <CalendarGrid
+                  <UnifiedCalendarGrid
                     cells={mergeCalendars(signal.github.calendar, signal.leetcode.calendar)}
                     label="Combined GitHub and LeetCode consistency calendar"
                     levelClassName={unifiedLevelClassName}
@@ -620,33 +648,6 @@ export default function SignalGridSection() {
                         value={leetcode ? `${formatNumber(leetcode.stats.streak)}d` : '...'}
                         detail="from LeetCode calendar"
                       />
-                    </div>
-
-                    <div className="grid gap-2 border-y border-border/70 py-4 sm:grid-cols-3">
-                      <div>
-                        <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground/70">
-                          Easy
-                        </span>
-                        <span className="mt-1 block font-display text-2xl font-bold leading-none text-foreground">
-                          {formatNumber(leetcode?.stats.easy)}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground/70">
-                          Medium
-                        </span>
-                        <span className="mt-1 block font-display text-2xl font-bold leading-none text-foreground">
-                          {formatNumber(leetcode?.stats.medium)}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground/70">
-                          Hard
-                        </span>
-                        <span className="mt-1 block font-display text-2xl font-bold leading-none text-foreground">
-                          {formatNumber(leetcode?.stats.hard)}
-                        </span>
-                      </div>
                     </div>
 
                     <div>
