@@ -110,14 +110,21 @@ const getCurrentStreak = (countsByDate: Map<string, number>) => {
 }
 
 const fetchJson = async <T,>(url: string, init?: RequestInit): Promise<T> => {
+  const headers: Record<string, string> = {
+    accept: 'application/json',
+    'user-agent': 'namit-portfolio-signal-grid',
+    ...init?.headers,
+  }
+
+  // Add GitHub token if available for authenticated requests
+  if (url.includes('api.github.com') && process.env.GITHUB_TOKEN) {
+    headers['authorization'] = `Bearer ${process.env.GITHUB_TOKEN}`
+  }
+
   const response = await fetch(url, {
     ...init,
     cache: 'no-store',
-    headers: {
-      accept: 'application/json',
-      'user-agent': 'namit-portfolio-signal-grid',
-      ...init?.headers,
-    },
+    headers,
   })
 
   if (!response.ok) {
@@ -161,6 +168,7 @@ const getGitHubSignal = async () => {
         accept: 'text/html',
         'user-agent': 'namit-portfolio-signal-grid',
         'x-requested-with': 'XMLHttpRequest',
+        ...(process.env.GITHUB_TOKEN && { 'authorization': `Bearer ${process.env.GITHUB_TOKEN}` }),
       },
     }).then((response) => {
       if (!response.ok) throw new Error(`GitHub calendar returned ${response.status}`)
