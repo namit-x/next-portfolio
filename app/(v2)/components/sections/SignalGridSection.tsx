@@ -194,12 +194,7 @@ function mergeCalendars(github: CalendarCell[], leetcode: CalendarCell[]): Calen
     }
   })
 
-  // Use 52 weeks (364 cells) for unified view instead of 30 weeks
   const extendedLength = 52 * 7
-  const allDates = new Set<string>()
-  github.forEach((cell) => allDates.add(cell.date))
-  leetcode.forEach((cell) => allDates.add(cell.date))
-
   const maxCount = Math.max(...Array.from(dateMap.values()), 1)
   const merged: CalendarCell[] = []
 
@@ -351,6 +346,8 @@ export default function SignalGridSection() {
   const github = signal?.github
   const leetcode = signal?.leetcode
 
+  const unifiedCalendar = signal ? mergeCalendars(signal.github.calendar, signal.leetcode.calendar) : []
+
   return (
     <section
       id="signal"
@@ -471,51 +468,7 @@ export default function SignalGridSection() {
               />
             </div>
 
-            {showUnified && signal ? (
-              <div className="mt-8 animate-fade-in">
-                <article className="group relative min-h-[34rem] overflow-hidden rounded-[10px] border border-border [background:linear-gradient(135deg,hsl(var(--card)/0.64),hsl(var(--background)/0.34))] p-4 backdrop-blur-sm transition-all duration-300 hover:border-[var(--hero-accent-line)] sm:p-5 lg:p-6">
-                  <div
-                    className="absolute inset-x-0 top-0 h-36 [background:linear-gradient(180deg,var(--hero-accent-dim),transparent)] opacity-60"
-                    aria-hidden="true"
-                  />
-
-                  <div className="relative flex flex-col">
-                    <div className="flex items-center justify-between gap-4 border-b border-border/70 pb-5 mb-6">
-                      <div>
-                        <h3 className="font-display text-2xl font-bold leading-none tracking-tight text-foreground sm:text-3xl">
-                          Consistency View
-                        </h3>
-                        <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70">
-                          Unified GitHub + LeetCode activity heatmap
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground">
-                        <span>Low</span>
-                        {[0, 1, 2, 3, 4].map((level) => (
-                          <span
-                            key={level}
-                            className={`h-2.5 w-2.5 rounded-[2px] ${unifiedLevelClassName[level]}`}
-                          />
-                        ))}
-                        <span>High</span>
-                      </div>
-                    </div>
-
-                    <p className="mb-4 font-mono text-xs text-muted-foreground">
-                      Combined activity from both platforms. Darker shades indicate more coding consistency and productivity across the calendar year.
-                    </p>
-
-                    <UnifiedCalendarGrid
-                      cells={mergeCalendars(signal.github.calendar, signal.leetcode.calendar)}
-                      label="Combined GitHub and LeetCode consistency calendar"
-                      levelClassName={unifiedLevelClassName}
-                    />
-                  </div>
-                </article>
-              </div>
-            ) : null}
-
-            <div className={`${showUnified ? 'mt-8' : 'mt-8'} grid grid-cols-1 gap-5 xl:grid-cols-2`}>
+            <div className="mt-8 grid grid-cols-1 gap-5 xl:grid-cols-2">
               <SignalPanel
                 platform="GitHub"
                 handle={github?.profile.handle ?? '@namit-x'}
@@ -524,6 +477,7 @@ export default function SignalGridSection() {
                 tone="cyan"
               >
                 <div className="grid gap-5 pt-5">
+                  {/* Stats always visible */}
                   <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                     <Metric
                       label="Active days"
@@ -547,36 +501,47 @@ export default function SignalGridSection() {
                     />
                   </div>
 
-                  {!showUnified && (
-                    <div>
-                      <div className="mb-3 flex items-end justify-between gap-4">
-                        <div>
-                          <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70">
-                            GitHub contribution calendar
-                          </p>
-                          <p className="mt-1 font-mono text-xs text-muted-foreground">
-                            Last 30 weeks from your public GitHub profile.
-                          </p>
-                        </div>
-                        <div className="hidden items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground sm:flex">
-                          <span>Low</span>
-                          {[0, 1, 2, 3, 4].map((level) => (
-                            <span
-                              key={level}
-                              className={`h-2.5 w-2.5 rounded-[2px] ${githubLevelClassName[level]}`}
-                            />
-                          ))}
-                          <span>High</span>
-                        </div>
+                  {/* Calendar section - either individual or unified */}
+                  <div>
+                    <div className="mb-3 flex items-end justify-between gap-4">
+                      <div>
+                        <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70">
+                          {showUnified ? 'Combined activity calendar' : 'GitHub contribution calendar'}
+                        </p>
+                        <p className="mt-1 font-mono text-xs text-muted-foreground">
+                          {showUnified
+                            ? 'Unified GitHub + LeetCode activity heatmap.'
+                            : 'Last 30 weeks from your public GitHub profile.'}
+                        </p>
                       </div>
+                      <div className="hidden items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground sm:flex">
+                        <span>Low</span>
+                        {[0, 1, 2, 3, 4].map((level) => (
+                          <span
+                            key={level}
+                            className={`h-2.5 w-2.5 rounded-[2px] ${showUnified ? unifiedLevelClassName[level] : githubLevelClassName[level]}`}
+                          />
+                        ))}
+                        <span>High</span>
+                      </div>
+                    </div>
+
+                    {showUnified ? (
+                      <UnifiedCalendarGrid
+                        cells={unifiedCalendar}
+                        label="Combined GitHub and LeetCode consistency calendar"
+                        levelClassName={unifiedLevelClassName}
+                      />
+                    ) : (
                       <CalendarGrid
                         cells={github?.calendar ?? fallbackCalendar}
                         label="GitHub contribution calendar"
                         levelClassName={githubLevelClassName}
                       />
-                    </div>
-                  )}
+                    )}
+                  </div>
 
+                  {/* Recent repos always visible */}
                   <div className="grid gap-2 border-t border-border/70 pt-4 sm:grid-cols-[auto_minmax(0,_1fr)] sm:items-center">
                     <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70">
                       Recent repos
@@ -603,6 +568,7 @@ export default function SignalGridSection() {
                 tone="gold"
               >
                 <div className="grid gap-5 pt-5">
+                  {/* Stats always visible */}
                   <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                     <Metric
                       label="Solved"
@@ -626,35 +592,45 @@ export default function SignalGridSection() {
                     />
                   </div>
 
-                  {!showUnified && (
-                    <div>
-                      <div className="mb-3 flex items-end justify-between gap-4">
-                        <div>
-                          <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70">
-                            LeetCode submission calendar
-                          </p>
-                          <p className="mt-1 font-mono text-xs text-muted-foreground">
-                            Last 30 weeks from namitrana&apos;s submission heatmap.
-                          </p>
-                        </div>
-                        <div className="hidden items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground sm:flex">
-                          <span>Low</span>
-                          {[0, 1, 2, 3, 4].map((level) => (
-                            <span
-                              key={level}
-                              className={`h-2.5 w-2.5 rounded-[2px] ${leetcodeLevelClassName[level]}`}
-                            />
-                          ))}
-                          <span>High</span>
-                        </div>
+                  {/* Calendar section - either individual or unified */}
+                  <div>
+                    <div className="mb-3 flex items-end justify-between gap-4">
+                      <div>
+                        <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70">
+                          {showUnified ? 'Combined activity calendar' : 'LeetCode submission calendar'}
+                        </p>
+                        <p className="mt-1 font-mono text-xs text-muted-foreground">
+                          {showUnified
+                            ? 'Unified GitHub + LeetCode activity heatmap.'
+                            : 'Last 30 weeks from namitrana\'s submission heatmap.'}
+                        </p>
                       </div>
+                      <div className="hidden items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground sm:flex">
+                        <span>Low</span>
+                        {[0, 1, 2, 3, 4].map((level) => (
+                          <span
+                            key={level}
+                            className={`h-2.5 w-2.5 rounded-[2px] ${showUnified ? unifiedLevelClassName[level] : leetcodeLevelClassName[level]}`}
+                          />
+                        ))}
+                        <span>High</span>
+                      </div>
+                    </div>
+
+                    {showUnified ? (
+                      <UnifiedCalendarGrid
+                        cells={unifiedCalendar}
+                        label="Combined GitHub and LeetCode consistency calendar"
+                        levelClassName={unifiedLevelClassName}
+                      />
+                    ) : (
                       <CalendarGrid
                         cells={leetcode?.calendar ?? fallbackCalendar}
                         label="LeetCode submission calendar"
                         levelClassName={leetcodeLevelClassName}
                       />
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </SignalPanel>
             </div>
