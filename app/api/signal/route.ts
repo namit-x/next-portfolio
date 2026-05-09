@@ -113,12 +113,20 @@ const fetchJson = async <T,>(url: string, init?: RequestInit): Promise<T> => {
   const headers: Record<string, string> = {
     accept: 'application/json',
     'user-agent': 'namit-portfolio-signal-grid',
-    ...init?.headers,
   }
 
-  // Add GitHub token if available for authenticated requests
-  if (url.includes('api.github.com') && process.env.GITHUB_TOKEN) {
-    headers['authorization'] = `Bearer ${process.env.GITHUB_TOKEN}`
+  // Add GitHub token if available for authenticated requests (skip if placeholder)
+  if (
+    url.includes('api.github.com') &&
+    process.env.GITHUB_TOKEN &&
+    process.env.GITHUB_TOKEN !== 'your_github_token_here'
+  ) {
+    headers['authorization'] = `token ${process.env.GITHUB_TOKEN}`
+  }
+
+  // Merge init headers if provided
+  if (init?.headers && typeof init.headers === 'object' && !Array.isArray(init.headers)) {
+    Object.assign(headers, init.headers)
   }
 
   const response = await fetch(url, {
@@ -168,7 +176,10 @@ const getGitHubSignal = async () => {
         accept: 'text/html',
         'user-agent': 'namit-portfolio-signal-grid',
         'x-requested-with': 'XMLHttpRequest',
-        ...(process.env.GITHUB_TOKEN && { 'authorization': `Bearer ${process.env.GITHUB_TOKEN}` }),
+        ...(process.env.GITHUB_TOKEN &&
+          process.env.GITHUB_TOKEN !== 'your_github_token_here' && {
+          'authorization': `token ${process.env.GITHUB_TOKEN}`,
+        }),
       },
     }).then((response) => {
       if (!response.ok) throw new Error(`GitHub calendar returned ${response.status}`)
@@ -311,9 +322,28 @@ export async function GET() {
       }
     )
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unable to load signal data'
+
+    // Log detailed error for debugging
+    console.error('[Signal API Error]:', errorMessage)
+
+    // Check if it's a rate limit error
+    if (errorMessage.includes('returned 403')) {
+      console.error(
+        '[Rate Limit Help] GitHub API is rate-limited. To fix:\n' +
+        '1. Go to: https://github.com/settings/tokens?type=beta\n' +
+        '2. Click "Generate new token"\n' +
+        '3. Select "Personal Access Token (fine-grained)"\n' +
+        '4. Name: "next-portfolio-dev"\n' +
+        '5. Expiration: 90 days\n' +
+        '6. Repository access: Public repositories (read-only)\n' +
+        '7. Copy token and add to .env.local: GITHUB_TOKEN=ghp_xxx'
+      )
+    }
+
     return Response.json(
       {
-        error: error instanceof Error ? error.message : 'Unable to load signal data',
+        error: errorMessage,
       },
       {
         status: 502,
