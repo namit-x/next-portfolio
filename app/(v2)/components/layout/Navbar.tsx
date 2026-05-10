@@ -76,8 +76,11 @@ const GooeyNav: React.FC<GooeyNavProps> = ({
   const filterRef = useRef<HTMLSpanElement>(null);
   const textRef = useRef<HTMLSpanElement>(null);
   const [activeIndex, setActiveIndex] = useState<number>(initialActiveIndex);
+  const [isEffectActive, setIsEffectActive] = useState<boolean>(true);
 
   const makeParticles = (element: HTMLElement) => {
+    if (!isEffectActive) return;
+
     const d: [number, number] = particleDistances;
     const r = particleR;
     const bubbleTime = animationTime * 2 + timeVariance;
@@ -87,6 +90,7 @@ const GooeyNav: React.FC<GooeyNavProps> = ({
       const p = createParticle(i, t, d, r, particleCount, colors);
       element.classList.remove("active");
       setTimeout(() => {
+        if (!isEffectActive) return;
         const particle = document.createElement("span");
         const point = document.createElement("span");
         particle.classList.add("particle");
@@ -131,28 +135,67 @@ const GooeyNav: React.FC<GooeyNavProps> = ({
   const activateItem = (index: number, element: HTMLElement) => {
     setActiveIndex(index);
     updateEffectPosition(element);
-    if (filterRef.current) {
-      const particles = filterRef.current.querySelectorAll(".particle");
-      particles.forEach((p) => filterRef.current!.removeChild(p));
-    }
+
+    // CRITICAL FIX: Ensure text effect stays active
     if (textRef.current) {
+      // Remove any existing particles from filter
+      if (filterRef.current) {
+        const particles = filterRef.current.querySelectorAll(".particle");
+        particles.forEach((p) => filterRef.current!.removeChild(p));
+      }
+
+      // Force reflow to ensure animation triggers
       textRef.current.classList.remove("active");
-      void textRef.current.offsetWidth;
+      void textRef.current.offsetWidth; // Force reflow
       textRef.current.classList.add("active");
-    }
-    if (filterRef.current) {
-      makeParticles(filterRef.current);
+
+      // Make sure filter effect also gets the active class
+      if (filterRef.current) {
+        filterRef.current.classList.remove("active");
+        void filterRef.current.offsetWidth;
+        filterRef.current.classList.add("active");
+        makeParticles(filterRef.current);
+      }
     }
   };
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, index: number) => {
-    activateItem(index, e.currentTarget);
+    e.preventDefault(); // Prevent default hash jumping which might cause issues
+    const href = items[index].href;
+    const element = e.currentTarget;
+    activateItem(index, element);
+
+    // Smooth scroll to section
+    const sectionId = getSectionIdFromHref(href);
+    if (sectionId) {
+      const section = document.getElementById(sectionId);
+      if (section) {
+        section.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+
+    // Update URL without causing a jump
+    window.history.pushState({}, "", href);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLAnchorElement>) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       e.currentTarget.click();
+    }
+  };
+
+  // Toggle effect on/off (optional - you can remove this if you always want it on)
+  const toggleEffect = () => {
+    setIsEffectActive(!isEffectActive);
+    if (!isEffectActive && filterRef.current && textRef.current) {
+      // Re-activate the effect
+      const activeLink = navRef.current?.querySelectorAll("a")[activeIndex] as HTMLElement;
+      if (activeLink) {
+        updateEffectPosition(activeLink);
+        textRef.current.classList.add("active");
+        filterRef.current.classList.add("active");
+      }
     }
   };
 
@@ -166,13 +209,28 @@ const GooeyNav: React.FC<GooeyNavProps> = ({
       const matchedIndex = items.findIndex((item) => item.href === hash);
       if (matchedIndex !== -1) {
         setActiveIndex(matchedIndex);
+        // Also update the visual effect when hash changes
+        setTimeout(() => {
+          const activeLink = navRef.current?.querySelectorAll("a")[matchedIndex] as HTMLElement;
+          if (activeLink && textRef.current) {
+            updateEffectPosition(activeLink);
+            textRef.current.classList.add("active");
+            if (filterRef.current) {
+              filterRef.current.classList.add("active");
+            }
+          }
+        }, 0);
       }
     };
 
     syncActiveItem();
     window.addEventListener("hashchange", syncActiveItem);
+    window.addEventListener("popstate", syncActiveItem);
 
-    return () => window.removeEventListener("hashchange", syncActiveItem);
+    return () => {
+      window.removeEventListener("hashchange", syncActiveItem);
+      window.removeEventListener("popstate", syncActiveItem);
+    };
   }, [items]);
 
   useEffect(() => {
@@ -206,20 +264,29 @@ const GooeyNav: React.FC<GooeyNavProps> = ({
           ({ element }) => element === mostVisible
         );
 
-        if (matchedSection) {
+        if (matchedSection && matchedSection.index !== activeIndex) {
           setActiveIndex(matchedSection.index);
+          // Update visual effect when scroll changes active item
+          const activeLink = navRef.current?.querySelectorAll("a")[matchedSection.index] as HTMLElement;
+          if (activeLink && textRef.current) {
+            updateEffectPosition(activeLink);
+            textRef.current.classList.add("active");
+            if (filterRef.current) {
+              filterRef.current.classList.add("active");
+            }
+          }
         }
       },
       {
         rootMargin: "-20% 0px -55% 0px",
-        threshold: [0.2, 0.35, 0.5, 0.7],
+        threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1],
       }
     );
 
     sections.forEach(({ element }) => observer.observe(element));
 
     return () => observer.disconnect();
-  }, [items]);
+  }, [items, activeIndex]);
 
   useEffect(() => {
     if (!navRef.current || !containerRef.current) return;
@@ -228,7 +295,12 @@ const GooeyNav: React.FC<GooeyNavProps> = ({
     ] as HTMLElement;
     if (activeLink) {
       updateEffectPosition(activeLink);
-      textRef.current?.classList.add("active");
+      if (textRef.current && isEffectActive) {
+        textRef.current.classList.add("active");
+      }
+      if (filterRef.current && isEffectActive) {
+        filterRef.current.classList.add("active");
+      }
     }
     const resizeObserver = new ResizeObserver(() => {
       const currentActiveLink = navRef.current?.querySelectorAll("a")[
@@ -238,9 +310,11 @@ const GooeyNav: React.FC<GooeyNavProps> = ({
         updateEffectPosition(currentActiveLink);
       }
     });
-    resizeObserver.observe(containerRef.current);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
     return () => resizeObserver.disconnect();
-  }, [activeIndex, items]);
+  }, [activeIndex, items, isEffectActive]);
 
   return (
     <>
@@ -265,7 +339,7 @@ const GooeyNav: React.FC<GooeyNavProps> = ({
             z-index: 2;
           }
           .effect.text.active {
-            color: black;
+            color: black !important;
           }
           .effect.filter {
             filter: blur(7px) contrast(100) blur(0);
@@ -372,6 +446,7 @@ const GooeyNav: React.FC<GooeyNavProps> = ({
           li {
             position: relative;
             z-index: 5;
+            transition: color 0.3s ease;
           }
           li::after {
             content: "";
