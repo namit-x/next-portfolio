@@ -278,16 +278,32 @@ export default function ProjectsSection() {
               <article
                 key={project.id}
                 data-project-id={project.id}
-                className="flex-shrink-0 w-[95vw] md:w-[90vw] lg:w-[1100px] xl:w-[1200px] rounded-[2rem] border border-border [background:hsl(var(--card)/0.42)] backdrop-blur-sm overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl"
+                className="flex-shrink-0 w-[95vw] md:w-[90vw] lg:w-[1100px] xl:w-[1200px] rounded-[2rem] border border-border overflow-hidden transition-all duration-300 hover:shadow-2xl group"
               >
-                <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,_0.88fr)_minmax(0,_1.12fr)] min-h-[600px] lg:min-h-[700px]">
-                  <div className="flex flex-col justify-between gap-8 p-8 sm:p-10 md:p-12 lg:p-14">
+                <div className="relative w-full h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px]">
+                  {/* Image */}
+                  <Image
+                    src={project.imageUrl}
+                    alt={`${project.name} project preview`}
+                    fill
+                    sizes="(min-width: 1024px) 90vw, 95vw"
+                    className="object-cover object-center transition-transform duration-500 ease-out group-hover:scale-[1.02]"
+                  />
+
+                  {/* Overlay gradient */}
+                  <div
+                    className="absolute inset-0 bg-gradient-to-b from-background/0 via-transparent to-background/40 transition-opacity duration-300 group-hover:from-background/20 group-hover:via-background/30 group-hover:to-background/60"
+                    aria-hidden="true"
+                  />
+
+                  {/* Text overlay - hidden by default, shown on hover */}
+                  <div className="absolute inset-0 flex flex-col justify-between p-8 sm:p-10 md:p-12 lg:p-14 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <div>
-                      <div className="flex items-center justify-between gap-4 pb-4 border-b border-border">
-                        <span className="font-mono text-sm sm:text-base uppercase tracking-[0.1em] text-muted-foreground/75 font-semibold">
+                      <div className="flex items-center justify-between gap-4 pb-4 border-b border-white/20">
+                        <span className="font-mono text-sm sm:text-base uppercase tracking-[0.1em] text-white/75 font-semibold">
                           {project.number}
                         </span>
-                        <span className="font-mono text-sm sm:text-base uppercase tracking-[0.1em] text-muted-foreground/75 font-semibold">
+                        <span className="font-mono text-sm sm:text-base uppercase tracking-[0.1em] text-white/75 font-semibold">
                           {project.year}
                         </span>
                       </div>
@@ -296,10 +312,10 @@ export default function ProjectsSection() {
                         <p className="font-mono text-xs sm:text-sm uppercase tracking-[0.1em] text-primary font-semibold">
                           {project.category}
                         </p>
-                        <h3 className="mt-3 font-display text-[clamp(2rem,_5vw,_4rem)] leading-[1.05] tracking-tight text-foreground font-bold">
+                        <h3 className="mt-3 font-display text-[clamp(2rem,_5vw,_4rem)] leading-[1.05] tracking-tight text-white font-bold">
                           {project.name}
                         </h3>
-                        <p className="mt-5 max-w-lg font-mono text-sm sm:text-base font-light leading-relaxed text-muted-foreground">
+                        <p className="mt-5 max-w-lg font-mono text-sm sm:text-base font-light leading-relaxed text-white/80">
                           {project.summary}
                         </p>
                       </div>
@@ -310,35 +326,17 @@ export default function ProjectsSection() {
                         {project.tags.map((tag) => (
                           <li
                             key={tag}
-                            className="font-mono text-xs sm:text-sm uppercase tracking-[0.08em] text-muted-foreground border border-border px-3 py-1.5 rounded-full transition-colors hover:text-foreground hover:border-primary"
+                            className="font-mono text-xs sm:text-sm uppercase tracking-[0.08em] text-white/70 border border-white/30 px-3 py-1.5 rounded-full transition-colors hover:text-white hover:border-primary"
                           >
                             {tag}
                           </li>
                         ))}
                       </ul>
 
-                      <p className="font-mono text-sm sm:text-base text-foreground/90 leading-relaxed border-l-2 border-primary pl-4">
+                      <p className="font-mono text-sm sm:text-base text-white/90 leading-relaxed border-l-2 border-primary pl-4">
                         {project.impact}
                       </p>
                     </div>
-                  </div>
-
-                  <div className="relative aspect-[16/11] min-h-full overflow-hidden border-t border-border lg:border-t-0 lg:border-l lg:border-border">
-                    <div
-                      className="absolute inset-0 z-10"
-                      aria-hidden="true"
-                      style={{
-                        background:
-                          'linear-gradient(180deg, transparent 0%, hsl(var(--background) / 0.1) 100%)',
-                      }}
-                    />
-                    <Image
-                      src={project.imageUrl}
-                      alt={`${project.name} project preview`}
-                      fill
-                      sizes="(min-width: 1024px) 55vw, 100vw"
-                      className="object-cover object-center transition-transform duration-500 ease-out group-hover:scale-[1.03]"
-                    />
                   </div>
                 </div>
               </article>
@@ -371,7 +369,7 @@ export default function ProjectsSection() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
             </svg>
-            <span>Hover to pause • Drag to scroll manually</span>
+            <span>Hover to reveal details • Drag to navigate</span>
           </div>
         </div>
       </div>
