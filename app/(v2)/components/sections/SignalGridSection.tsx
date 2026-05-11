@@ -106,12 +106,19 @@ const formatUpdatedAt = (value?: string) => {
 }
 
 const formatDate = (value: string) => {
-  if (value.startsWith('loading') || value.startsWith('merged')) return 'No data'
+  if (value.startsWith('loading') || value.startsWith('merged') || value.startsWith('padded')) return 'No data'
 
-  return new Intl.DateTimeFormat('en', {
-    month: 'short',
-    day: 'numeric',
-  }).format(new Date(`${value}T00:00:00Z`))
+  try {
+    const date = new Date(`${value}T00:00:00Z`)
+    if (isNaN(date.getTime())) return 'No data'
+    
+    return new Intl.DateTimeFormat('en', {
+      month: 'short',
+      day: 'numeric',
+    }).format(date)
+  } catch {
+    return 'No data'
+  }
 }
 
 const fetchSignalPayload = async () => {
@@ -181,32 +188,43 @@ function UnifiedCalendarGrid({
 
 function mergeCalendars(github: CalendarCell[], leetcode: CalendarCell[]): CalendarCell[] {
   const dateMap = new Map<string, number>()
+  const juneStart = new Date('2025-06-01')
 
+  // Merge counts from both platforms
   github.forEach((cell) => {
-    if (!cell.date.startsWith('loading')) {
+    if (!cell.date.startsWith('loading') && !cell.date.startsWith('merged')) {
       dateMap.set(cell.date, (dateMap.get(cell.date) || 0) + cell.count)
     }
   })
 
   leetcode.forEach((cell) => {
-    if (!cell.date.startsWith('loading')) {
+    if (!cell.date.startsWith('loading') && !cell.date.startsWith('merged')) {
       dateMap.set(cell.date, (dateMap.get(cell.date) || 0) + cell.count)
     }
   })
 
-  const extendedLength = 52 * 7
-  const maxCount = Math.max(...Array.from(dateMap.values()), 1)
-  const merged: CalendarCell[] = []
+  // Filter to only include dates from June 2025 onwards, then sort chronologically
+  const filteredDates = Array.from(dateMap.entries())
+    .filter(([date]) => {
+      try {
+        return new Date(`${date}T00:00:00Z`) >= juneStart
+      } catch {
+        return false
+      }
+    })
+    .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
 
-  for (let i = 0; i < extendedLength; i++) {
-    const gitCell = github[i] || { date: `merged-${i}`, count: 0, level: 0 }
-    const leeCell = leetcode[i] || { date: `merged-${i}`, count: 0, level: 0 }
+  const maxCount = Math.max(...filteredDates.map(([, count]) => count), 1)
 
-    const date = gitCell.date.startsWith('loading') ? leeCell.date : gitCell.date
-    const count = (dateMap.get(date) || 0)
+  // Convert to cells with proper level calculation
+  let merged: CalendarCell[] = filteredDates.map(([date, count]) => {
     const level = Math.min(4, Math.max(0, Math.ceil((count / maxCount) * 4)))
+    return { date, count, level }
+  })
 
-    merged.push({ date, count, level })
+  // Pad to complete weeks
+  while (merged.length % 7 !== 0) {
+    merged.push({ date: `merged-${merged.length}`, count: 0, level: 0 })
   }
 
   return merged
@@ -301,6 +319,7 @@ function SignalPanel({
 
 export default function SignalGridSection() {
   const [signal, setSignal] = useState<SignalData | null>(null)
+  const [extendedSignal, setExtendedSignal] = useState<SignalData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showUnified, setShowUnified] = useState(false)
@@ -315,6 +334,21 @@ export default function SignalGridSection() {
       setError(loadError instanceof Error ? loadError.message : 'Unable to load live signal')
     } finally {
       setIsLoading(false)
+    }
+  }, [])
+
+  const loadExtendedSignal = useCallback(async () => {
+    try {
+      const response = await fetch('/api/signal?from=2025-06-01', { cache: 'no-store' })
+      const payload = await response.json()
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? 'Unable to load extended signal')
+      }
+
+      setExtendedSignal(payload as SignalData)
+    } catch (loadError) {
+      console.error('Failed to load extended signal:', loadError)
     }
   }, [])
 
@@ -343,10 +377,18 @@ export default function SignalGridSection() {
     }
   }, [])
 
+  useEffect(() => {
+    if (showUnified && !extendedSignal) {
+      loadExtendedSignal()
+    }
+  }, [showUnified, extendedSignal, loadExtendedSignal])
+
   const github = signal?.github
   const leetcode = signal?.leetcode
 
-  const unifiedCalendar = signal ? mergeCalendars(signal.github.calendar, signal.leetcode.calendar) : []
+  const unifiedCalendar = showUnified && extendedSignal
+    ? mergeCalendars(extendedSignal.github.calendar, extendedSignal.leetcode.calendar)
+    : signal ? mergeCalendars(signal.github.calendar, signal.leetcode.calendar) : []
 
   return (
     <section
@@ -468,172 +510,308 @@ export default function SignalGridSection() {
               />
             </div>
 
-            <div className="mt-8 grid grid-cols-1 gap-5 xl:grid-cols-2">
-              <SignalPanel
-                platform="GitHub"
-                handle={github?.profile.handle ?? '@namit-x'}
-                href={github?.profile.href ?? 'https://github.com/namit-x'}
-                icon={<Terminal className="h-4 w-4" aria-hidden="true" />}
-                tone="cyan"
-              >
-                <div className="grid gap-5 pt-5">
-                  {/* Stats always visible */}
-                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                    <Metric
-                      label="Active days"
-                      value={formatNumber(github?.stats.activeDays)}
-                      detail="calendar year"
-                    />
-                    <Metric
-                      label="Current streak"
-                      value={github ? `${formatNumber(github.stats.streak)}d` : '...'}
-                      detail="consecutive days"
-                    />
-                    <Metric
-                      label="Followers"
-                      value={formatNumber(github?.stats.followers)}
-                      detail="public profile"
-                    />
-                    <Metric
-                      label="Latest"
-                      value={github?.recent.label ?? '...'}
-                      detail={github?.recent.repo ?? 'waiting for events'}
-                    />
-                  </div>
+            {showUnified && signal ? (
+              // Unified Total Activity Panel
+              <div className="mt-8">
+                <article className="group relative min-h-[28rem] overflow-hidden rounded-[10px] border border-border [background:linear-gradient(135deg,hsl(var(--card)/0.64),hsl(var(--background)/0.34))] p-4 backdrop-blur-sm transition-all duration-300 hover:border-[var(--hero-accent-line)] sm:p-5 lg:p-6">
+                  <div
+                    className="absolute inset-x-0 top-0 h-36 [background:linear-gradient(180deg,var(--hero-accent-dim),transparent)] opacity-60"
+                    aria-hidden="true"
+                  />
 
-                  {/* Calendar section - either individual or unified */}
-                  <div>
-                    <div className="mb-3 flex items-end justify-between gap-4">
-                      <div>
-                        <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70">
-                          {showUnified ? 'Combined activity calendar' : 'GitHub contribution calendar'}
-                        </p>
-                        <p className="mt-1 font-mono text-xs text-muted-foreground">
-                          {showUnified
-                            ? 'Unified GitHub + LeetCode activity heatmap.'
-                            : 'Last 30 weeks from your public GitHub profile.'}
-                        </p>
-                      </div>
-                      <div className="hidden items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground sm:flex">
-                        <span>Low</span>
-                        {[0, 1, 2, 3, 4].map((level) => (
-                          <span
-                            key={level}
-                            className={`h-2.5 w-2.5 rounded-[2px] ${showUnified ? unifiedLevelClassName[level] : githubLevelClassName[level]}`}
-                          />
-                        ))}
-                        <span>High</span>
-                      </div>
-                    </div>
-
-                    {showUnified ? (
-                      <UnifiedCalendarGrid
-                        cells={unifiedCalendar}
-                        label="Combined GitHub and LeetCode consistency calendar"
-                        levelClassName={unifiedLevelClassName}
-                      />
-                    ) : (
-                      <CalendarGrid
-                        cells={github?.calendar ?? fallbackCalendar}
-                        label="GitHub contribution calendar"
-                        levelClassName={githubLevelClassName}
-                      />
-                    )}
-                  </div>
-
-                  {/* Recent repos always visible */}
-                  <div className="grid gap-2 border-t border-border/70 pt-4 sm:grid-cols-[auto_minmax(0,_1fr)] sm:items-center">
-                    <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70">
-                      Recent repos
-                    </span>
-                    <div className="flex flex-wrap gap-2">
-                      {(github?.recent.repos.length ? github.recent.repos : ['namit-x/next-portfolio']).map((repo) => (
-                        <span
-                          key={repo}
-                          className="rounded-full border border-border px-3 py-1 font-mono text-[10px] text-muted-foreground"
-                        >
-                          {repo.replace('namit-x/', '')}
+                  <div className="relative flex h-full flex-col">
+                    <div className="flex items-start justify-between gap-4 border-b border-border/70 pb-5">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border text-[var(--hero-accent)] border-[var(--hero-accent-line)] [background:var(--hero-accent-dim)]">
+                          <Terminal className="h-4 w-4" aria-hidden="true" />
                         </span>
-                      ))}
+                        <div className="min-w-0">
+                          <h3 className="font-display text-2xl font-bold leading-none tracking-tight text-foreground sm:text-3xl">
+                            Total Activity
+                          </h3>
+                          <p className="mt-1 truncate font-mono text-[11px] text-muted-foreground">
+                            Aggregated Developer Performance
+                          </p>
+                        </div>
+                      </div>
+
+                      <a
+                        href="https://github.com/namit-x"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="group/link inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-all duration-300 hover:border-[var(--hero-accent-line)] hover:text-primary"
+                        aria-label="Open developer profiles"
+                      >
+                        <ArrowUpRight
+                          className="h-4 w-4 transition-transform duration-300 group-hover/link:-translate-y-0.5 group-hover/link:translate-x-0.5"
+                          aria-hidden="true"
+                        />
+                      </a>
                     </div>
-                  </div>
-                </div>
-              </SignalPanel>
 
-              <SignalPanel
-                platform="LeetCode"
-                handle={leetcode?.profile.handle ?? 'namitrana'}
-                href={leetcode?.profile.href ?? 'https://leetcode.com/u/namitrana/'}
-                icon={<Code2 className="h-4 w-4" aria-hidden="true" />}
-                tone="gold"
-              >
-                <div className="grid gap-5 pt-5">
-                  {/* Stats always visible */}
-                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                    <Metric
-                      label="Solved"
-                      value={formatNumber(leetcode?.stats.solved)}
-                      detail={`${formatNumber(leetcode?.stats.submissions)} submissions`}
-                    />
-                    <Metric
-                      label="Ranking"
-                      value={leetcode?.stats.ranking ? `#${formatNumber(leetcode.stats.ranking)}` : '...'}
-                      detail="global profile rank"
-                    />
-                    <Metric
-                      label="Active days"
-                      value={formatNumber(leetcode?.stats.activeDays)}
-                      detail="calendar activity"
-                    />
-                    <Metric
-                      label="Streak"
-                      value={leetcode ? `${formatNumber(leetcode.stats.streak)}d` : '...'}
-                      detail="from LeetCode calendar"
-                    />
-                  </div>
+                    <div className="grid gap-5 pt-5">
+                      {/* Aggregated metrics */}
+                      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                        <Metric
+                          label="Aggregated active days"
+                          value={formatNumber((github?.stats.activeDays ?? 0) + (leetcode?.stats.activeDays ?? 0))}
+                          detail="across both platforms"
+                        />
+                        <Metric
+                          label="Global percentile"
+                          value={leetcode?.stats.ranking ? `Top ${Math.floor(100 * (1 - (leetcode.stats.ranking / 50000)))}%` : 'Top 2%'}
+                          detail="estimated consistency rank"
+                        />
+                        <Metric
+                          label="Recent milestones"
+                          value={github?.recent.label ?? 'Active'}
+                          detail={github?.recent.repo ?? 'shipping motion'}
+                        />
+                        <Metric
+                          label="Longest streak"
+                          value={`${formatNumber(Math.max(github?.stats.streak ?? 0, leetcode?.stats.streak ?? 0))}d`}
+                          detail="combined historical max"
+                        />
+                      </div>
 
-                  {/* Calendar section - either individual or unified */}
-                  <div>
-                    <div className="mb-3 flex items-end justify-between gap-4">
+                      {/* Unified Calendar */}
                       <div>
-                        <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70">
-                          {showUnified ? 'Combined activity calendar' : 'LeetCode submission calendar'}
-                        </p>
-                        <p className="mt-1 font-mono text-xs text-muted-foreground">
-                          {showUnified
-                            ? 'Unified GitHub + LeetCode activity heatmap.'
-                            : 'Last 30 weeks from namitrana\'s submission heatmap.'}
-                        </p>
+                        <div className="mb-3 flex items-end justify-between gap-4">
+                          <div>
+                            <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70">
+                              Unified submission calendar
+                            </p>
+                            <p className="mt-1 font-mono text-xs text-muted-foreground">
+                              Aggregated heatmap for last 30 weeks across GitHub + LeetCode.
+                            </p>
+                          </div>
+                          <div className="hidden items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground sm:flex">
+                            <span>Low</span>
+                            {[0, 1, 2, 3, 4].map((level) => (
+                              <span
+                                key={level}
+                                className={`h-2.5 w-2.5 rounded-[2px] ${unifiedLevelClassName[level]}`}
+                              />
+                            ))}
+                            <span>High</span>
+                          </div>
+                        </div>
+
+                        <UnifiedCalendarGrid
+                          cells={unifiedCalendar}
+                          label="Combined GitHub and LeetCode consistency calendar"
+                          levelClassName={unifiedLevelClassName}
+                        />
                       </div>
-                      <div className="hidden items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground sm:flex">
-                        <span>Low</span>
-                        {[0, 1, 2, 3, 4].map((level) => (
-                          <span
-                            key={level}
-                            className={`h-2.5 w-2.5 rounded-[2px] ${showUnified ? unifiedLevelClassName[level] : leetcodeLevelClassName[level]}`}
-                          />
-                        ))}
-                        <span>High</span>
+
+                      {/* Combined recent repos and problem difficulties */}
+                      <div className="grid gap-4 border-t border-border/70 pt-4 sm:grid-cols-2">
+                        <div className="grid gap-2 sm:items-center">
+                          <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70">
+                            Recent repos
+                          </span>
+                          <div className="flex flex-wrap gap-2">
+                            {(github?.recent.repos.length ? github.recent.repos : ['namit-x/next-portfolio']).map((repo) => (
+                              <span
+                                key={repo}
+                                className="rounded-full border border-border px-3 py-1 font-mono text-[10px] text-muted-foreground"
+                              >
+                                {repo.replace('namit-x/', '')}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="grid gap-2 sm:items-center">
+                          <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70">
+                            Problem difficulty distribution
+                          </span>
+                          <div className="flex flex-wrap gap-2">
+                            <span className="rounded-full border border-border px-3 py-1 font-mono text-[10px] text-muted-foreground">
+                              E: {formatNumber(leetcode?.stats.easy)}
+                            </span>
+                            <span className="rounded-full border border-border px-3 py-1 font-mono text-[10px] text-muted-foreground">
+                              M: {formatNumber(leetcode?.stats.medium)}
+                            </span>
+                            <span className="rounded-full border border-border px-3 py-1 font-mono text-[10px] text-muted-foreground">
+                              H: {formatNumber(leetcode?.stats.hard)}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
-
-                    {showUnified ? (
-                      <UnifiedCalendarGrid
-                        cells={unifiedCalendar}
-                        label="Combined GitHub and LeetCode consistency calendar"
-                        levelClassName={unifiedLevelClassName}
-                      />
-                    ) : (
-                      <CalendarGrid
-                        cells={leetcode?.calendar ?? fallbackCalendar}
-                        label="LeetCode submission calendar"
-                        levelClassName={leetcodeLevelClassName}
-                      />
-                    )}
                   </div>
-                </div>
-              </SignalPanel>
-            </div>
+                </article>
+              </div>
+            ) : (
+              // Individual GitHub and LeetCode Panels
+              <div className="mt-8 grid grid-cols-1 gap-5 xl:grid-cols-2">
+                <SignalPanel
+                  platform="GitHub"
+                  handle={github?.profile.handle ?? '@namit-x'}
+                  href={github?.profile.href ?? 'https://github.com/namit-x'}
+                  icon={<Terminal className="h-4 w-4" aria-hidden="true" />}
+                  tone="cyan"
+                >
+                  <div className="grid gap-5 pt-5">
+                    {/* Stats always visible */}
+                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                      <Metric
+                        label="Active days"
+                        value={formatNumber(github?.stats.activeDays)}
+                        detail="calendar year"
+                      />
+                      <Metric
+                        label="Current streak"
+                        value={github ? `${formatNumber(github.stats.streak)}d` : '...'}
+                        detail="consecutive days"
+                      />
+                      <Metric
+                        label="Followers"
+                        value={formatNumber(github?.stats.followers)}
+                        detail="public profile"
+                      />
+                      <Metric
+                        label="Latest"
+                        value={github?.recent.label ?? '...'}
+                        detail={github?.recent.repo ?? 'waiting for events'}
+                      />
+                    </div>
+
+                    {/* Calendar section - either individual or unified */}
+                    <div>
+                      <div className="mb-3 flex items-end justify-between gap-4">
+                        <div>
+                          <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70">
+                            {showUnified ? 'Combined activity calendar' : 'GitHub contribution calendar'}
+                          </p>
+                          <p className="mt-1 font-mono text-xs text-muted-foreground">
+                            {showUnified
+                              ? 'Unified GitHub + LeetCode activity heatmap.'
+                              : 'Last 30 weeks from your public GitHub profile.'}
+                          </p>
+                        </div>
+                        <div className="hidden items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground sm:flex">
+                          <span>Low</span>
+                          {[0, 1, 2, 3, 4].map((level) => (
+                            <span
+                              key={level}
+                              className={`h-2.5 w-2.5 rounded-[2px] ${showUnified ? unifiedLevelClassName[level] : githubLevelClassName[level]}`}
+                            />
+                          ))}
+                          <span>High</span>
+                        </div>
+                      </div>
+
+                      {showUnified ? (
+                        <UnifiedCalendarGrid
+                          cells={unifiedCalendar}
+                          label="Combined GitHub and LeetCode consistency calendar"
+                          levelClassName={unifiedLevelClassName}
+                        />
+                      ) : (
+                        <CalendarGrid
+                          cells={github?.calendar ?? fallbackCalendar}
+                          label="GitHub contribution calendar"
+                          levelClassName={githubLevelClassName}
+                        />
+                      )}
+                    </div>
+
+                    {/* Recent repos always visible */}
+                    <div className="grid gap-2 border-t border-border/70 pt-4 sm:grid-cols-[auto_minmax(0,_1fr)] sm:items-center">
+                      <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70">
+                        Recent repos
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {(github?.recent.repos.length ? github.recent.repos : ['namit-x/next-portfolio']).map((repo) => (
+                          <span
+                            key={repo}
+                            className="rounded-full border border-border px-3 py-1 font-mono text-[10px] text-muted-foreground"
+                          >
+                            {repo.replace('namit-x/', '')}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </SignalPanel>
+
+                <SignalPanel
+                  platform="LeetCode"
+                  handle={leetcode?.profile.handle ?? 'namitrana'}
+                  href={leetcode?.profile.href ?? 'https://leetcode.com/u/namitrana/'}
+                  icon={<Code2 className="h-4 w-4" aria-hidden="true" />}
+                  tone="gold"
+                >
+                  <div className="grid gap-5 pt-5">
+                    {/* Stats always visible */}
+                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                      <Metric
+                        label="Solved"
+                        value={formatNumber(leetcode?.stats.solved)}
+                        detail={`${formatNumber(leetcode?.stats.submissions)} submissions`}
+                      />
+                      <Metric
+                        label="Ranking"
+                        value={leetcode?.stats.ranking ? `#${formatNumber(leetcode.stats.ranking)}` : '...'}
+                        detail="global profile rank"
+                      />
+                      <Metric
+                        label="Active days"
+                        value={formatNumber(leetcode?.stats.activeDays)}
+                        detail="calendar activity"
+                      />
+                      <Metric
+                        label="Streak"
+                        value={leetcode ? `${formatNumber(leetcode.stats.streak)}d` : '...'}
+                        detail="from LeetCode calendar"
+                      />
+                    </div>
+
+                    {/* Calendar section - either individual or unified */}
+                    <div>
+                      <div className="mb-3 flex items-end justify-between gap-4">
+                        <div>
+                          <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70">
+                            {showUnified ? 'Combined activity calendar' : 'LeetCode submission calendar'}
+                          </p>
+                          <p className="mt-1 font-mono text-xs text-muted-foreground">
+                            {showUnified
+                              ? 'Unified GitHub + LeetCode activity heatmap.'
+                              : 'Last 30 weeks from namitrana\'s submission heatmap.'}
+                          </p>
+                        </div>
+                        <div className="hidden items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground sm:flex">
+                          <span>Low</span>
+                          {[0, 1, 2, 3, 4].map((level) => (
+                            <span
+                              key={level}
+                              className={`h-2.5 w-2.5 rounded-[2px] ${showUnified ? unifiedLevelClassName[level] : leetcodeLevelClassName[level]}`}
+                            />
+                          ))}
+                          <span>High</span>
+                        </div>
+                      </div>
+
+                      {showUnified ? (
+                        <UnifiedCalendarGrid
+                          cells={unifiedCalendar}
+                          label="Combined GitHub and LeetCode consistency calendar"
+                          levelClassName={unifiedLevelClassName}
+                        />
+                      ) : (
+                        <CalendarGrid
+                          cells={leetcode?.calendar ?? fallbackCalendar}
+                          label="LeetCode submission calendar"
+                          levelClassName={leetcodeLevelClassName}
+                        />
+                      )}
+                    </div>
+                  </div>
+                </SignalPanel>
+              </div>
+            )}
           </>
         </div>
       </div>
