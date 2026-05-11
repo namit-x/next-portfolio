@@ -55,7 +55,14 @@ export const dynamic = 'force-dynamic'
 
 const toDateKey = (date: Date) => date.toISOString().slice(0, 10)
 
-const getCalendarStart = () => {
+const getCalendarStart = (fromDate?: string) => {
+  if (fromDate) {
+    const date = new Date(`${fromDate}T00:00:00Z`)
+    if (!isNaN(date.getTime())) {
+      return date
+    }
+  }
+
   const today = new Date()
   today.setUTCHours(0, 0, 0, 0)
   const dayOffset = today.getUTCDay()
@@ -79,21 +86,39 @@ const levelFromCount = (count: number, thresholds = [1, 3, 6, 10]) => {
 
 const buildCalendar = (
   countsByDate: Map<string, number>,
-  levelByDate?: Map<string, number>
+  levelByDate?: Map<string, number>,
+  fromDate?: string
 ): CalendarCell[] => {
-  const start = getCalendarStart()
+  const start = getCalendarStart(fromDate)
+  const today = new Date()
+  today.setUTCHours(0, 0, 0, 0)
 
-  return Array.from({ length: CALENDAR_WEEKS * 7 }, (_, index) => {
-    const date = new Date(start.getTime() + index * DAY_MS)
+  const cells: CalendarCell[] = []
+  let date = new Date(start)
+
+  while (date <= today) {
     const key = toDateKey(date)
     const count = countsByDate.get(key) ?? 0
 
-    return {
+    cells.push({
       date: key,
       count,
       level: levelByDate?.get(key) ?? levelFromCount(count),
-    }
-  })
+    })
+
+    date.setUTCDate(date.getUTCDate() + 1)
+  }
+
+  // Pad to complete weeks
+  while (cells.length % 7 !== 0) {
+    cells.push({
+      date: `padded-${cells.length}`,
+      count: 0,
+      level: 0,
+    })
+  }
+
+  return cells
 }
 
 const getCurrentStreak = (countsByDate: Map<string, number>) => {
@@ -167,7 +192,7 @@ const parseGitHubCalendar = (html: string) => {
   return { countsByDate, levelByDate }
 }
 
-const getGitHubSignal = async () => {
+const getGitHubSignal = async (fromDate?: string) => {
   const [user, contributionHtml, events] = await Promise.all([
     fetchJson<GitHubUser>(`https://api.github.com/users/${GITHUB_USERNAME}`),
     fetch(`https://github.com/${GITHUB_USERNAME}?action=show&controller=profiles&tab=contributions&user_id=${GITHUB_USERNAME}`, {
@@ -218,7 +243,7 @@ const getGitHubSignal = async () => {
       repos: user.public_repos,
       followers: user.followers,
     },
-    calendar: buildCalendar(countsByDate, levelByDate),
+    calendar: buildCalendar(countsByDate, levelByDate, fromDate),
     recent: {
       label: lastEvent ? formatEventType(lastEvent.type) : 'no public event',
       repo: lastEvent?.repo?.name ?? recentRepos[0] ?? 'public profile',
@@ -228,7 +253,7 @@ const getGitHubSignal = async () => {
   }
 }
 
-const getLeetCodeSignal = async () => {
+const getLeetCodeSignal = async (fromDate?: string) => {
   const response = await fetchJson<LeetCodeResponse>('https://leetcode.com/graphql', {
     method: 'POST',
     headers: {
@@ -301,13 +326,15 @@ const getLeetCodeSignal = async () => {
       activeDays: user.userCalendar?.totalActiveDays ?? Array.from(countsByDate.values()).filter(Boolean).length,
       ranking: user.profile?.ranking ?? null,
     },
-    calendar: buildCalendar(countsByDate),
+    calendar: buildCalendar(countsByDate, undefined, fromDate),
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const [github, leetcode] = await Promise.all([getGitHubSignal(), getLeetCodeSignal()])
+    const url = new URL(request.url)
+    const fromDate = url.searchParams.get('from')
+    const [github, leetcode] = await Promise.all([getGitHubSignal(fromDate ?? undefined), getLeetCodeSignal(fromDate ?? undefined)])
 
     return Response.json(
       {
