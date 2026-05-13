@@ -59,34 +59,35 @@ type SignalData = {
   updatedAt: string
 }
 
-const fallbackCalendar = Array.from({ length: 30 * 7 }, (_, index) => ({
+const fallbackCalendar = Array.from({ length: 52 * 7 }, (_, index) => ({
   date: `loading-${index}`,
   count: 0,
   level: 0,
 }))
 
+// GitHub-style green color palette
 const githubLevelClassName = [
-  'bg-white/[0.045] dark:bg-white/[0.055]',
-  'bg-[oklch(0.72_0.17_195_/_0.18)]',
-  'bg-[oklch(0.72_0.17_195_/_0.32)]',
-  'bg-[oklch(0.72_0.17_195_/_0.52)]',
-  'bg-[oklch(0.72_0.17_195_/_0.78)] shadow-[0_0_18px_oklch(0.72_0.17_195_/_0.22)]',
+  'bg-[#0d1117] dark:bg-[#161b22] border border-[#30363d]',
+  'bg-[#0e4429]',
+  'bg-[#006d32]',
+  'bg-[#26a641]',
+  'bg-[#39d353]',
 ]
 
 const leetcodeLevelClassName = [
-  'bg-white/[0.045] dark:bg-white/[0.055]',
-  'bg-[oklch(0.80_0.13_80_/_0.18)]',
-  'bg-[oklch(0.80_0.13_80_/_0.32)]',
-  'bg-[oklch(0.80_0.13_80_/_0.52)]',
-  'bg-[oklch(0.80_0.13_80_/_0.76)] shadow-[0_0_18px_oklch(0.80_0.13_80_/_0.18)]',
+  'bg-[#0d1117] dark:bg-[#161b22] border border-[#30363d]',
+  'bg-[#164b35]',
+  'bg-[#2d6a4f]',
+  'bg-[#40916c]',
+  'bg-[#52b788]',
 ]
 
 const unifiedLevelClassName = [
-  'bg-white/[0.045] dark:bg-white/[0.055]',
-  'bg-[oklch(0.73_0.14_195_/_0.18)]',
-  'bg-[oklch(0.73_0.14_195_/_0.32)]',
-  'bg-[oklch(0.73_0.14_195_/_0.52)]',
-  'bg-[oklch(0.73_0.14_195_/_0.78)] shadow-[0_0_18px_oklch(0.73_0.14_195_/_0.22)]',
+  'bg-[#0d1117] dark:bg-[#161b22] border border-[#30363d]',
+  'bg-[#0e4429]',
+  'bg-[#006d32]',
+  'bg-[#26a641]',
+  'bg-[#39d353]',
 ]
 
 const formatNumber = (value: number | null | undefined) => {
@@ -111,7 +112,7 @@ const formatDate = (value: string) => {
   try {
     const date = new Date(`${value}T00:00:00Z`)
     if (isNaN(date.getTime())) return 'No data'
-    
+
     return new Intl.DateTimeFormat('en', {
       month: 'short',
       day: 'numeric',
@@ -119,6 +120,90 @@ const formatDate = (value: string) => {
   } catch {
     return 'No data'
   }
+}
+
+const filterCellsUpToToday = (cells: CalendarCell[]): CalendarCell[] => {
+  const today = new Date()
+  today.setUTCHours(0, 0, 0, 0)
+
+  return cells.filter((cell) => {
+    // Filter out placeholder cells
+    if (cell.date.startsWith('loading') || cell.date.startsWith('merged') || cell.date.startsWith('padded')) {
+      return false
+    }
+
+    try {
+      const cellDate = new Date(`${cell.date}T00:00:00Z`)
+      return cellDate <= today
+    } catch {
+      return false
+    }
+  })
+}
+
+const buildGitHubCalendar = (allCells: CalendarCell[]): { weeks: CalendarCell[][], monthsByWeek: { [key: number]: string } } => {
+  // Calculate exact date range: 52 weeks before today
+  const today = new Date()
+  today.setUTCHours(0, 0, 0, 0)
+
+  // Go back exactly 52 weeks (364 days)
+  const startDate = new Date(today)
+  startDate.setUTCDate(startDate.getUTCDate() - 364)
+
+  // Go back to previous Sunday
+  const dayOfWeek = startDate.getUTCDay()
+  startDate.setUTCDate(startDate.getUTCDate() - dayOfWeek)
+
+  // Create a map of dates to cells
+  const cellMap = new Map<string, CalendarCell>()
+  allCells.forEach((cell) => {
+    if (!cell.date.startsWith('loading') && !cell.date.startsWith('merged') && !cell.date.startsWith('padded')) {
+      cellMap.set(cell.date, cell)
+    }
+  })
+
+  // Generate all weeks
+  const weeks: CalendarCell[][] = []
+  const monthsByWeek: { [key: number]: string } = {}
+  let currentDate = new Date(startDate)
+
+  for (let weekIdx = 0; weekIdx < 53; weekIdx++) {
+    const week: CalendarCell[] = []
+    let weekHasMonth = false
+    let monthName = ''
+
+    for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
+      const dateStr = currentDate.toISOString().split('T')[0]
+      const cell = cellMap.get(dateStr)
+
+      if (cell && !cell.date.startsWith('loading')) {
+        week.push(cell)
+
+        // Capture month name on first day of month
+        if (currentDate.getUTCDate() === 1 && !weekHasMonth) {
+          monthName = new Intl.DateTimeFormat('en', { month: 'short' }).format(currentDate)
+          weekHasMonth = true
+        }
+      } else {
+        // Add placeholder for missing days
+        week.push({
+          date: `padded-${dateStr}`,
+          count: 0,
+          level: 0,
+        })
+      }
+
+      currentDate.setUTCDate(currentDate.getUTCDate() + 1)
+    }
+
+    if (weekHasMonth) {
+      monthsByWeek[weekIdx] = monthName
+    }
+
+    weeks.push(week)
+  }
+
+  return { weeks, monthsByWeek }
 }
 
 const fetchSignalPayload = async () => {
@@ -141,19 +226,49 @@ function CalendarGrid({
   label: string
   levelClassName: string[]
 }) {
+  const { weeks, monthsByWeek } = buildGitHubCalendar(cells)
+  const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
   return (
-    <div className="overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <div
-        className="grid min-w-[42rem] grid-flow-col grid-rows-7 gap-1.5"
-        aria-label={label}
-      >
-        {cells.map((cell) => (
-          <span
-            key={cell.date}
-            className={`h-4 rounded-[3px] transition-all duration-300 hover:scale-125 hover:ring-1 hover:ring-[var(--hero-accent-line)] ${levelClassName[cell.level] ?? levelClassName[0]}`}
-            title={`${formatDate(cell.date)} · ${cell.count} ${cell.count === 1 ? 'activity' : 'activities'}`}
-          />
-        ))}
+    <div className="overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="inline-block">
+        {/* Month labels */}
+        <div className="flex gap-1 mb-2 pl-14">
+          {weeks.map((_, weekIdx) => (
+            <div key={`month-${weekIdx}`} className="w-2.5">
+              {monthsByWeek[weekIdx] && (
+                <span className="font-mono text-[10px] text-muted-foreground">
+                  {monthsByWeek[weekIdx]}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Calendar grid */}
+        <div className="flex gap-1">
+          {/* Day labels */}
+          <div className="flex flex-col gap-1 justify-end pb-1">
+            {dayLabels.map((day, idx) => (
+              <div key={day} className="w-12 h-2.5 flex items-center font-mono text-[10px] text-muted-foreground">
+                {idx % 2 === 0 ? day : ''}
+              </div>
+            ))}
+          </div>
+
+          {/* Grid */}
+          <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${weeks.length}, 10px)`, gridAutoRows: 'repeat(7, 10px)' }} aria-label={label}>
+            {weeks.flatMap((week) =>
+              week.map((cell) => (
+                <span
+                  key={cell.date}
+                  className={`h-2.5 w-2.5 rounded-[2px] transition-all duration-300 hover:scale-150 hover:ring-1 hover:ring-[var(--hero-accent-line)] ${levelClassName[cell.level] ?? levelClassName[0]}`}
+                  title={`${formatDate(cell.date)} · ${cell.count} ${cell.count === 1 ? 'activity' : 'activities'}`}
+                />
+              ))
+            )}
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -168,64 +283,102 @@ function UnifiedCalendarGrid({
   label: string
   levelClassName: string[]
 }) {
+  const { weeks, monthsByWeek } = buildGitHubCalendar(cells)
+  const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
   return (
-    <div className="overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <div
-        className="grid min-w-[42rem] grid-flow-col grid-rows-7 gap-1"
-        aria-label={label}
-      >
-        {cells.map((cell) => (
-          <span
-            key={cell.date}
-            className={`h-3 rounded-[2px] transition-all duration-300 hover:scale-125 hover:ring-1 hover:ring-[var(--hero-accent-line)] ${levelClassName[cell.level] ?? levelClassName[0]}`}
-            title={`${formatDate(cell.date)} · ${cell.count} ${cell.count === 1 ? 'activity' : 'activities'}`}
-          />
-        ))}
+    <div className="overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="inline-block">
+        {/* Month labels */}
+        <div className="flex gap-1 mb-2 pl-14">
+          {weeks.map((_, weekIdx) => (
+            <div key={`month-${weekIdx}`} className="w-2.5">
+              {monthsByWeek[weekIdx] && (
+                <span className="font-mono text-[10px] text-muted-foreground">
+                  {monthsByWeek[weekIdx]}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Calendar grid */}
+        <div className="flex gap-1">
+          {/* Day labels */}
+          <div className="flex flex-col gap-1 justify-end pb-1">
+            {dayLabels.map((day, idx) => (
+              <div key={day} className="w-12 h-2.5 flex items-center font-mono text-[10px] text-muted-foreground">
+                {idx % 2 === 0 ? day : ''}
+              </div>
+            ))}
+          </div>
+
+          {/* Grid */}
+          <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${weeks.length}, 10px)`, gridAutoRows: 'repeat(7, 10px)' }} aria-label={label}>
+            {weeks.flatMap((week) =>
+              week.map((cell) => (
+                <span
+                  key={cell.date}
+                  className={`h-2.5 w-2.5 rounded-[2px] transition-all duration-300 hover:scale-150 hover:ring-1 hover:ring-[var(--hero-accent-line)] ${levelClassName[cell.level] ?? levelClassName[0]}`}
+                  title={`${formatDate(cell.date)} · ${cell.count} ${cell.count === 1 ? 'activity' : 'activities'}`}
+                />
+              ))
+            )}
+          </div>
+        </div>
       </div>
     </div>
   )
 }
 
 function mergeCalendars(github: CalendarCell[], leetcode: CalendarCell[]): CalendarCell[] {
+  // Calculate the same 52-week range as the GitHub calendar
+  const today = new Date()
+  today.setUTCHours(0, 0, 0, 0)
+
+  const startDate = new Date(today)
+  startDate.setUTCDate(startDate.getUTCDate() - 364)
+  const dayOfWeek = startDate.getUTCDay()
+  startDate.setUTCDate(startDate.getUTCDate() - dayOfWeek)
+
+  // Create a map for merged data
   const dateMap = new Map<string, number>()
-  const juneStart = new Date('2025-06-01')
 
   // Merge counts from both platforms
   github.forEach((cell) => {
-    if (!cell.date.startsWith('loading') && !cell.date.startsWith('merged')) {
+    if (!cell.date.startsWith('loading') && !cell.date.startsWith('merged') && !cell.date.startsWith('padded')) {
       dateMap.set(cell.date, (dateMap.get(cell.date) || 0) + cell.count)
     }
   })
 
   leetcode.forEach((cell) => {
-    if (!cell.date.startsWith('loading') && !cell.date.startsWith('merged')) {
+    if (!cell.date.startsWith('loading') && !cell.date.startsWith('merged') && !cell.date.startsWith('padded')) {
       dateMap.set(cell.date, (dateMap.get(cell.date) || 0) + cell.count)
     }
   })
 
-  // Filter to only include dates from June 2025 onwards, then sort chronologically
-  const filteredDates = Array.from(dateMap.entries())
-    .filter(([date]) => {
-      try {
-        return new Date(`${date}T00:00:00Z`) >= juneStart
-      } catch {
-        return false
-      }
+  // Generate all 371 cells for 53 weeks
+  const merged: CalendarCell[] = []
+  let currentDate = new Date(startDate)
+
+  for (let i = 0; i < 371; i++) {
+    const dateStr = currentDate.toISOString().split('T')[0]
+    const count = dateMap.get(dateStr) || 0
+
+    merged.push({
+      date: dateStr,
+      count,
+      level: 0, // Will be recalculated below
     })
-    .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
 
-  const maxCount = Math.max(...filteredDates.map(([, count]) => count), 1)
-
-  // Convert to cells with proper level calculation
-  let merged: CalendarCell[] = filteredDates.map(([date, count]) => {
-    const level = Math.min(4, Math.max(0, Math.ceil((count / maxCount) * 4)))
-    return { date, count, level }
-  })
-
-  // Pad to complete weeks
-  while (merged.length % 7 !== 0) {
-    merged.push({ date: `merged-${merged.length}`, count: 0, level: 0 })
+    currentDate.setUTCDate(currentDate.getUTCDate() + 1)
   }
+
+  // Calculate level based on max count
+  const maxCount = Math.max(...Array.from(dateMap.values()), 1)
+  merged.forEach((cell) => {
+    cell.level = Math.min(4, Math.max(0, Math.ceil((cell.count / maxCount) * 4)))
+  })
 
   return merged
 }
@@ -379,7 +532,9 @@ export default function SignalGridSection() {
 
   useEffect(() => {
     if (showUnified && !extendedSignal) {
-      loadExtendedSignal()
+      // Use setTimeout to defer state updates and avoid cascading renders
+      const timeoutId = setTimeout(() => loadExtendedSignal(), 0)
+      return () => clearTimeout(timeoutId)
     }
   }, [showUnified, extendedSignal, loadExtendedSignal])
 
@@ -582,7 +737,7 @@ export default function SignalGridSection() {
                               Unified submission calendar
                             </p>
                             <p className="mt-1 font-mono text-xs text-muted-foreground">
-                              Aggregated heatmap for last 30 weeks across GitHub + LeetCode.
+                              Aggregated heatmap from June 2025 to now across GitHub + LeetCode.
                             </p>
                           </div>
                           <div className="hidden items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground sm:flex">
@@ -687,8 +842,8 @@ export default function SignalGridSection() {
                           </p>
                           <p className="mt-1 font-mono text-xs text-muted-foreground">
                             {showUnified
-                              ? 'Unified GitHub + LeetCode activity heatmap.'
-                              : 'Last 30 weeks from your public GitHub profile.'}
+                              ? 'Unified GitHub + LeetCode activity heatmap from June 2025 to now.'
+                              : 'Full contribution history from your public GitHub profile, ending today.'}
                           </p>
                         </div>
                         <div className="hidden items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground sm:flex">
@@ -778,8 +933,8 @@ export default function SignalGridSection() {
                           </p>
                           <p className="mt-1 font-mono text-xs text-muted-foreground">
                             {showUnified
-                              ? 'Unified GitHub + LeetCode activity heatmap.'
-                              : 'Last 30 weeks from namitrana\'s submission heatmap.'}
+                              ? 'Unified GitHub + LeetCode activity heatmap from June 2025 to now.'
+                              : 'Full submission history from namitrana\'s heatmap, ending today.'}
                           </p>
                         </div>
                         <div className="hidden items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground sm:flex">
