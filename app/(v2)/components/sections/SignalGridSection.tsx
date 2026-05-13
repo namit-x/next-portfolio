@@ -285,11 +285,11 @@ function mergeCalendars(github: CalendarCell[], leetcode: CalendarCell[]): Calen
     }
   })
 
-  // Generate all 371 cells for 53 weeks
+  // Generate cells only up to today (exclude future empty dates)
   const merged: CalendarCell[] = []
   let currentDate = new Date(startDate)
 
-  for (let i = 0; i < 371; i++) {
+  while (currentDate <= today) {
     const dateStr = currentDate.toISOString().split('T')[0]
     const count = dateMap.get(dateStr) || 0
 
