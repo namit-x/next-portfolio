@@ -49,7 +49,7 @@ const GITHUB_USERNAME = 'namit-x'
 const LEETCODE_USERNAME = 'namitrana'
 
 const DAY_MS = 24 * 60 * 60 * 1000
-const CALENDAR_WEEKS = 30
+const CALENDAR_WEEKS = 52
 
 export const dynamic = 'force-dynamic'
 
