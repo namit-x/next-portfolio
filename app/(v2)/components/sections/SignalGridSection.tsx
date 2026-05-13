@@ -169,23 +169,20 @@ const buildGitHubCalendar = (allCells: CalendarCell[]): { weeks: CalendarCell[][
 
   for (let weekIdx = 0; weekIdx < 53; weekIdx++) {
     const week: CalendarCell[] = []
-    let weekHasMonth = false
-    let monthName = ''
 
     for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
       const dateStr = currentDate.toISOString().split('T')[0]
       const cell = cellMap.get(dateStr)
 
+      // Check if this is the 1st of a month to label the week
+      if (currentDate.getUTCDate() === 1) {
+        const monthName = new Intl.DateTimeFormat('en', { month: 'short' }).format(currentDate)
+        monthsByWeek[weekIdx] = monthName
+      }
+
       if (cell && !cell.date.startsWith('loading')) {
         week.push(cell)
-
-        // Capture month name on first day of month
-        if (currentDate.getUTCDate() === 1 && !weekHasMonth) {
-          monthName = new Intl.DateTimeFormat('en', { month: 'short' }).format(currentDate)
-          weekHasMonth = true
-        }
       } else {
-        // Add placeholder for missing days
         week.push({
           date: `padded-${dateStr}`,
           count: 0,
@@ -194,10 +191,6 @@ const buildGitHubCalendar = (allCells: CalendarCell[]): { weeks: CalendarCell[][
       }
 
       currentDate.setUTCDate(currentDate.getUTCDate() + 1)
-    }
-
-    if (weekHasMonth) {
-      monthsByWeek[weekIdx] = monthName
     }
 
     weeks.push(week)
