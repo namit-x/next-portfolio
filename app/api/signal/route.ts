@@ -301,7 +301,8 @@ const getLeetCodeSignal = async (fromDate?: string) => {
   const countsByDate = new Map<string, number>()
 
   Object.entries(calendarPayload).forEach(([timestamp, count]) => {
-    const date = toDateKey(new Date(Number(timestamp) * 1000))
+    const dt = new Date(Number(timestamp) * 1000)
+    const date = `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}-${String(dt.getUTCDate()).padStart(2, '0')}`
     countsByDate.set(date, count)
   })
 

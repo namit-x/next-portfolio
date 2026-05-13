@@ -141,56 +141,46 @@ const filterCellsUpToToday = (cells: CalendarCell[]): CalendarCell[] => {
   })
 }
 
-const buildGitHubCalendar = (allCells: CalendarCell[]): { weeks: CalendarCell[][], monthsByWeek: { [key: number]: string } } => {
-  // Calculate exact date range: 52 weeks before today
-  const today = new Date()
-  today.setUTCHours(0, 0, 0, 0)
+const buildGitHubCalendar = (
+  cells: CalendarCell[]
+): {
+  weeks: CalendarCell[][]
+  monthsByWeek: Record<number, string>
+} => {
+  const validCells = cells.filter(
+    (cell) =>
+      !cell.date.startsWith('loading') &&
+      !cell.date.startsWith('merged')
+  )
 
-  // Go back exactly 52 weeks (364 days)
-  const startDate = new Date(today)
-  startDate.setUTCDate(startDate.getUTCDate() - 364)
-
-  // Go back to previous Sunday
-  const dayOfWeek = startDate.getUTCDay()
-  startDate.setUTCDate(startDate.getUTCDate() - dayOfWeek)
-
-  // Create a map of dates to cells
-  const cellMap = new Map<string, CalendarCell>()
-  allCells.forEach((cell) => {
-    if (!cell.date.startsWith('loading') && !cell.date.startsWith('merged') && !cell.date.startsWith('padded')) {
-      cellMap.set(cell.date, cell)
-    }
-  })
-
-  // Generate all weeks
   const weeks: CalendarCell[][] = []
-  const monthsByWeek: { [key: number]: string } = {}
-  let currentDate = new Date(startDate)
+  const monthsByWeek: Record<number, string> = {}
 
-  for (let weekIdx = 0; weekIdx < 53; weekIdx++) {
-    const week: CalendarCell[] = []
+  for (let i = 0; i < validCells.length; i += 7) {
+    const week = validCells.slice(i, i + 7)
 
-    for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
-      const dateStr = currentDate.toISOString().split('T')[0]
-      const cell = cellMap.get(dateStr)
-
-      // Check if this is the 1st of a month to label the week
-      if (currentDate.getUTCDate() === 1) {
-        const monthName = new Intl.DateTimeFormat('en', { month: 'short' }).format(currentDate)
-        monthsByWeek[weekIdx] = monthName
-      }
-
-      if (cell && !cell.date.startsWith('loading')) {
-        week.push(cell)
-      } else {
+    if (week.length < 7) {
+      while (week.length < 7) {
         week.push({
-          date: `padded-${dateStr}`,
+          date: `padded-${i}-${week.length}`,
           count: 0,
           level: 0,
         })
       }
+    }
 
-      currentDate.setUTCDate(currentDate.getUTCDate() + 1)
+    const firstRealCell = week.find(
+      (c) => !c.date.startsWith('padded')
+    )
+
+    if (firstRealCell) {
+      const d = new Date(`${firstRealCell.date}T00:00:00Z`)
+
+      if (d.getUTCDate() <= 7) {
+        monthsByWeek[weeks.length] = new Intl.DateTimeFormat('en', {
+          month: 'short',
+        }).format(d)
+      }
     }
 
     weeks.push(week)
@@ -223,10 +213,10 @@ function CalendarGrid({
   const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
   return (
-    <div className="overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <div className="inline-block">
+    <div className="overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mx-4 px-4 sm:-mx-5 sm:px-5 lg:-mx-6 lg:px-6">
+      <div className="min-w-min">
         {/* Month labels */}
-        <div className="flex gap-1 mb-2 pl-14">
+        <div className="flex gap-1 mb-2" style={{ paddingLeft: '56px' }}>
           {weeks.map((_, weekIdx) => (
             <div key={`month-${weekIdx}`} className="w-2.5">
               {monthsByWeek[weekIdx] && (
@@ -250,7 +240,7 @@ function CalendarGrid({
           </div>
 
           {/* Grid */}
-          <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${weeks.length}, 10px)`, gridAutoRows: 'repeat(7, 10px)' }} aria-label={label}>
+          <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${weeks.length}, 10px)`, gridTemplateRows: 'repeat(7, 10px)', gridAutoFlow: 'column' }} aria-label={label}>
             {weeks.flatMap((week) =>
               week.map((cell) => (
                 <span
@@ -267,62 +257,7 @@ function CalendarGrid({
   )
 }
 
-function UnifiedCalendarGrid({
-  cells,
-  label,
-  levelClassName,
-}: {
-  cells: CalendarCell[]
-  label: string
-  levelClassName: string[]
-}) {
-  const { weeks, monthsByWeek } = buildGitHubCalendar(cells)
-  const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-  return (
-    <div className="overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <div className="inline-block">
-        {/* Month labels */}
-        <div className="flex gap-1 mb-2 pl-14">
-          {weeks.map((_, weekIdx) => (
-            <div key={`month-${weekIdx}`} className="w-2.5">
-              {monthsByWeek[weekIdx] && (
-                <span className="font-mono text-[10px] text-muted-foreground">
-                  {monthsByWeek[weekIdx]}
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* Calendar grid */}
-        <div className="flex gap-1">
-          {/* Day labels */}
-          <div className="flex flex-col gap-1 justify-end pb-1">
-            {dayLabels.map((day, idx) => (
-              <div key={day} className="w-12 h-2.5 flex items-center font-mono text-[10px] text-muted-foreground">
-                {idx % 2 === 0 ? day : ''}
-              </div>
-            ))}
-          </div>
-
-          {/* Grid */}
-          <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${weeks.length}, 10px)`, gridAutoRows: 'repeat(7, 10px)' }} aria-label={label}>
-            {weeks.flatMap((week) =>
-              week.map((cell) => (
-                <span
-                  key={cell.date}
-                  className={`h-2.5 w-2.5 rounded-[2px] transition-all duration-300 hover:scale-150 hover:ring-1 hover:ring-[var(--hero-accent-line)] ${levelClassName[cell.level] ?? levelClassName[0]}`}
-                  title={`${formatDate(cell.date)} · ${cell.count} ${cell.count === 1 ? 'activity' : 'activities'}`}
-                />
-              ))
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 function mergeCalendars(github: CalendarCell[], leetcode: CalendarCell[]): CalendarCell[] {
   // Calculate the same 52-week range as the GitHub calendar
@@ -745,7 +680,7 @@ export default function SignalGridSection() {
                           </div>
                         </div>
 
-                        <UnifiedCalendarGrid
+                        <CalendarGrid
                           cells={unifiedCalendar}
                           label="Combined GitHub and LeetCode consistency calendar"
                           levelClassName={unifiedLevelClassName}
@@ -852,7 +787,7 @@ export default function SignalGridSection() {
                       </div>
 
                       {showUnified ? (
-                        <UnifiedCalendarGrid
+                        <CalendarGrid
                           cells={unifiedCalendar}
                           label="Combined GitHub and LeetCode consistency calendar"
                           levelClassName={unifiedLevelClassName}
@@ -943,7 +878,7 @@ export default function SignalGridSection() {
                       </div>
 
                       {showUnified ? (
-                        <UnifiedCalendarGrid
+                        <CalendarGrid
                           cells={unifiedCalendar}
                           label="Combined GitHub and LeetCode consistency calendar"
                           levelClassName={unifiedLevelClassName}
