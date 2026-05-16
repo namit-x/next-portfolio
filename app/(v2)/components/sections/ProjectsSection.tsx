@@ -184,19 +184,20 @@ export default function ProjectsSection() {
     return () => container.removeEventListener('scroll', handleScroll)
   }, [updateCurrentIndex])
 
-  // Mouse drag handlers for horizontal scrolling
+  // Mouse drag handlers for bidirectional horizontal scrolling
   const onMouseDown = (e: React.MouseEvent) => {
     const container = containerRef.current
     if (!container) return
 
-    // Prevent text selection while dragging
+    // Prevent default to avoid text selection and image dragging
     e.preventDefault()
 
     setIsDragging(true)
-    dragStartXRef.current = e.pageX - container.offsetLeft
+    // Store the starting mouse X position and current scroll position
+    dragStartXRef.current = e.clientX
     dragScrollLeftRef.current = container.scrollLeft
 
-    // Change cursor
+    // Change cursor and disable selection
     container.style.cursor = 'grabbing'
     container.style.userSelect = 'none'
   }
@@ -204,11 +205,11 @@ export default function ProjectsSection() {
   const onMouseMove = useCallback((e: MouseEvent) => {
     if (!isDragging || !containerRef.current) return
 
-    e.preventDefault()
+    // Calculate the distance moved
+    const deltaX = e.clientX - dragStartXRef.current
+    // Update scroll position (positive delta = scroll left, negative = scroll right)
+    containerRef.current.scrollLeft = dragScrollLeftRef.current - deltaX
 
-    const x = e.pageX - containerRef.current.offsetLeft
-    const walk = (x - dragStartXRef.current) * 1.5
-    containerRef.current.scrollLeft = dragScrollLeftRef.current - walk
     updateCurrentIndex()
   }, [isDragging, updateCurrentIndex])
 
@@ -312,7 +313,7 @@ export default function ProjectsSection() {
         {/* Infinite Scroll Container */}
         <div
           ref={containerRef}
-          className="overflow-x-auto cursor-grab scrollbar-hide"
+          className="overflow-x-auto scrollbar-hide"
           style={{
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
@@ -453,7 +454,7 @@ export default function ProjectsSection() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
             </svg>
-            <span>Hover to pause • Drag to scroll manually • Hover cards to reveal project details</span>
+            <span>Hover to pause • Drag to scroll manually (both directions) • Hover cards to reveal project details</span>
           </div>
         </div>
       </div>
