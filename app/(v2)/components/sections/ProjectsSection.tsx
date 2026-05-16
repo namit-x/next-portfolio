@@ -278,64 +278,86 @@ export default function ProjectsSection() {
               <article
                 key={project.id}
                 data-project-id={project.id}
-                className="flex-shrink-0 w-[95vw] md:w-[90vw] lg:w-[1100px] xl:w-[1200px] rounded-[2rem] border border-border overflow-hidden transition-all duration-300 hover:shadow-2xl group"
+                className="group relative flex-shrink-0 w-[95vw] md:w-[90vw] lg:w-[1100px] xl:w-[1200px] rounded-[2rem] overflow-hidden transition-all duration-300 hover:shadow-2xl"
               >
                 <div className="relative w-full h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px]">
-                  {/* Image */}
+                  {/* Full background image */}
                   <Image
                     src={project.imageUrl}
                     alt={`${project.name} project preview`}
                     fill
                     sizes="(min-width: 1024px) 90vw, 95vw"
-                    className="object-cover object-center transition-transform duration-500 ease-out group-hover:scale-[1.02]"
+                    className="object-cover object-center"
+                    priority
                   />
 
-                  {/* Overlay gradient */}
+                  {/* Black overlay panel - slides in from left on hover */}
                   <div
-                    className="absolute inset-0 bg-gradient-to-b from-background/0 via-transparent to-background/40 transition-opacity duration-300 group-hover:from-background/20 group-hover:via-background/30 group-hover:to-background/60"
-                    aria-hidden="true"
-                  />
-
-                  {/* Text overlay - hidden by default, shown on hover */}
-                  <div className="absolute inset-0 flex flex-col justify-between p-8 sm:p-10 md:p-12 lg:p-14 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div>
-                      <div className="flex items-center justify-between gap-4 pb-4 border-b border-white/20">
-                        <span className="font-mono text-sm sm:text-base uppercase tracking-[0.1em] text-white/75 font-semibold">
-                          {project.number}
-                        </span>
-                        <span className="font-mono text-sm sm:text-base uppercase tracking-[0.1em] text-white/75 font-semibold">
-                          {project.year}
-                        </span>
+                    className="absolute inset-y-0 left-0 w-full md:w-2/3 lg:w-1/2 bg-black/95 backdrop-blur-sm transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out z-10 overflow-y-auto"
+                  >
+                    <div className="flex flex-col justify-between h-full p-8 sm:p-10 md:p-12 lg:p-14">
+                      {/* Top section - number and year */}
+                      <div>
+                        <div className="flex items-center justify-between gap-4 pb-6 border-b border-white/20">
+                          <span className="font-mono text-2xl sm:text-3xl md:text-4xl font-bold text-white/90">
+                            {project.number}
+                          </span>
+                          <span className="font-mono text-sm sm:text-base uppercase tracking-[0.1em] text-white/70 font-semibold">
+                            {project.year}
+                          </span>
+                        </div>
                       </div>
 
-                      <div className="mt-8 sm:mt-10">
-                        <p className="font-mono text-xs sm:text-sm uppercase tracking-[0.1em] text-primary font-semibold">
-                          {project.category}
+                      {/* Middle section - main content */}
+                      <div className="flex-1 flex flex-col justify-center py-8">
+                        <p className="font-mono text-xs sm:text-sm uppercase tracking-[0.2em] text-primary font-semibold mb-3">
+                          {project.category.toUpperCase()}
                         </p>
-                        <h3 className="mt-3 font-display text-[clamp(2rem,_5vw,_4rem)] leading-[1.05] tracking-tight text-white font-bold">
+                        <h3 className="font-display text-[clamp(2rem,_5vw,_3.5rem)] leading-[1.1] tracking-tight text-white font-bold mb-5">
                           {project.name}
                         </h3>
-                        <p className="mt-5 max-w-lg font-mono text-sm sm:text-base font-light leading-relaxed text-white/80">
+                        <p className="font-mono text-sm sm:text-base font-light leading-relaxed text-white/70 max-w-lg mb-8">
                           {project.summary}
                         </p>
+
+                        {/* Navigation UI mockup */}
+                        <div className="space-y-4 mb-8">
+                          <div className="flex gap-6 border-b border-white/10 pb-3">
+                            <span className="font-mono text-xs uppercase tracking-wider text-white/40">New</span>
+                            <span className="font-mono text-xs uppercase tracking-wider text-white/40">Women</span>
+                            <span className="font-mono text-xs uppercase tracking-wider text-white/40">Men</span>
+                            <span className="font-mono text-xs uppercase tracking-wider text-white/40">Beauty</span>
+                            <span className="font-mono text-xs uppercase tracking-wider text-white/40">Home</span>
+                          </div>
+
+                          <div>
+                            <h4 className="font-display text-xl text-white font-semibold mb-1">Luxury Essentials</h4>
+                            <p className="font-mono text-xs text-white/50">Timeless pieces for your wardrobe</p>
+                          </div>
+
+                          <button className="bg-white text-black px-6 py-2 rounded-full font-mono text-sm font-semibold hover:bg-primary hover:text-white transition-colors">
+                            Shop Now
+                          </button>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="flex flex-col gap-6">
-                      <ul className="flex flex-wrap gap-3" aria-label={`${project.name} technologies`}>
-                        {project.tags.map((tag) => (
-                          <li
-                            key={tag}
-                            className="font-mono text-xs sm:text-sm uppercase tracking-[0.08em] text-white/70 border border-white/30 px-3 py-1.5 rounded-full transition-colors hover:text-white hover:border-primary"
-                          >
-                            {tag}
-                          </li>
-                        ))}
-                      </ul>
+                      {/* Bottom section - tags and impact */}
+                      <div className="space-y-4 pt-6 border-t border-white/20">
+                        <ul className="flex flex-wrap gap-2" aria-label={`${project.name} technologies`}>
+                          {project.tags.map((tag) => (
+                            <li
+                              key={tag}
+                              className="font-mono text-xs uppercase tracking-[0.08em] text-white/60 border border-white/20 px-2.5 py-1 rounded-full"
+                            >
+                              {tag}
+                            </li>
+                          ))}
+                        </ul>
 
-                      <p className="font-mono text-sm sm:text-base text-white/90 leading-relaxed border-l-2 border-primary pl-4">
-                        {project.impact}
-                      </p>
+                        <p className="font-mono text-sm text-white/80 leading-relaxed border-l-2 border-primary pl-4">
+                          {project.impact}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -355,8 +377,8 @@ export default function ProjectsSection() {
               key={index}
               onClick={() => goToProject(index)}
               className={`transition-all duration-300 rounded-full ${currentIndex === index
-                  ? 'w-10 bg-primary'
-                  : 'w-2.5 bg-border hover:bg-primary/50'
+                ? 'w-10 bg-primary'
+                : 'w-2.5 bg-border hover:bg-primary/50'
                 } h-2.5`}
               aria-label={`Go to project ${index + 1}`}
             />
@@ -369,7 +391,7 @@ export default function ProjectsSection() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
             </svg>
-            <span>Hover to reveal details • Drag to navigate</span>
+            <span>Hover to pause • Drag to scroll manually • Hover cards to reveal project details</span>
           </div>
         </div>
       </div>
