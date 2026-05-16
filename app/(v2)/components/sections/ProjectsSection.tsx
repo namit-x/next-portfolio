@@ -74,6 +74,7 @@ export default function ProjectsSection() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const dragStartXRef = useRef(0)
   const dragScrollLeftRef = useRef(0)
+  const autoScrollRef = useRef<number | null>(null)
 
   const scrollSpeed = 1.2
 
@@ -119,72 +120,122 @@ export default function ProjectsSection() {
     setCurrentIndex(mostVisibleIndex)
   }, [])
 
-  // 🚀 TRUE INFINITE SCROLL LOGIC
-  useEffect(() => {
-    const container = containerRef.current
-    const track = trackRef.current
-    if (!container || !track) return
-
-    let rafId: number
-
-    const step = () => {
-      if (!isHovered && !isDragging) {
-        container.scrollLeft += scrollSpeed
-
-        const firstChild = track.children[0] as HTMLElement
-        if (!firstChild) return
-
-        // If first card completely out of view → move it to end
-        if (container.scrollLeft >= firstChild.offsetWidth + 24) {
-          container.scrollLeft -= firstChild.offsetWidth + 24
-          track.appendChild(firstChild)
-          // Update index after reordering
-          updateCurrentIndex()
-        }
-      }
-
-      rafId = requestAnimationFrame(step)
+  // Auto-scroll animation with proper cleanup
+  const startAutoScroll = useCallback(() => {
+    if (autoScrollRef.current) {
+      cancelAnimationFrame(autoScrollRef.current)
     }
 
-    rafId = requestAnimationFrame(step)
+    const step = () => {
+      const container = containerRef.current
+      const track = trackRef.current
 
-    return () => cancelAnimationFrame(rafId)
+      if (!container || !track || isHovered || isDragging) {
+        autoScrollRef.current = null
+        return
+      }
+
+      container.scrollLeft += scrollSpeed
+
+      const firstChild = track.children[0] as HTMLElement
+      if (firstChild && container.scrollLeft >= firstChild.offsetWidth + 24) {
+        container.scrollLeft -= firstChild.offsetWidth + 24
+        track.appendChild(firstChild)
+        updateCurrentIndex()
+      }
+
+      autoScrollRef.current = requestAnimationFrame(step)
+    }
+
+    autoScrollRef.current = requestAnimationFrame(step)
   }, [isHovered, isDragging, scrollSpeed, updateCurrentIndex])
+
+  // Stop auto-scroll
+  const stopAutoScroll = useCallback(() => {
+    if (autoScrollRef.current) {
+      cancelAnimationFrame(autoScrollRef.current)
+      autoScrollRef.current = null
+    }
+  }, [])
+
+  // Manage auto-scroll based on hover/drag state
+  useEffect(() => {
+    if (!isHovered && !isDragging) {
+      startAutoScroll()
+    } else {
+      stopAutoScroll()
+    }
+
+    return () => stopAutoScroll()
+  }, [isHovered, isDragging, startAutoScroll, stopAutoScroll])
 
   // Update index on scroll events
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
 
-    container.addEventListener('scroll', updateCurrentIndex)
-    // Initial update
+    const handleScroll = () => {
+      updateCurrentIndex()
+    }
+
+    container.addEventListener('scroll', handleScroll, { passive: true })
     updateCurrentIndex()
 
-    return () => container.removeEventListener('scroll', updateCurrentIndex)
+    return () => container.removeEventListener('scroll', handleScroll)
   }, [updateCurrentIndex])
 
+  // Mouse drag handlers for horizontal scrolling
   const onMouseDown = (e: React.MouseEvent) => {
     const container = containerRef.current
     if (!container) return
 
-    setIsDragging(true)
-    dragStartXRef.current = e.pageX
-    dragScrollLeftRef.current = container.scrollLeft
-  }
-
-  const onMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !containerRef.current) return
+    // Prevent text selection while dragging
     e.preventDefault()
-    const walk = (e.pageX - dragStartXRef.current) * 1.5
-    containerRef.current.scrollLeft = dragScrollLeftRef.current - walk
-    // Update index while dragging
-    updateCurrentIndex()
+
+    setIsDragging(true)
+    dragStartXRef.current = e.pageX - container.offsetLeft
+    dragScrollLeftRef.current = container.scrollLeft
+
+    // Change cursor
+    container.style.cursor = 'grabbing'
+    container.style.userSelect = 'none'
   }
 
-  const onMouseUp = () => {
-    setIsDragging(false)
+  const onMouseMove = useCallback((e: MouseEvent) => {
+    if (!isDragging || !containerRef.current) return
+
+    e.preventDefault()
+
+    const x = e.pageX - containerRef.current.offsetLeft
+    const walk = (x - dragStartXRef.current) * 1.5
+    containerRef.current.scrollLeft = dragScrollLeftRef.current - walk
     updateCurrentIndex()
-  }
+  }, [isDragging, updateCurrentIndex])
+
+  const onMouseUp = useCallback(() => {
+    if (!containerRef.current) return
+
+    setIsDragging(false)
+    containerRef.current.style.cursor = 'grab'
+    containerRef.current.style.userSelect = ''
+    updateCurrentIndex()
+  }, [updateCurrentIndex])
+
+  // Add/remove global mouse event listeners for dragging
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', onMouseMove)
+      window.addEventListener('mouseup', onMouseUp)
+    } else {
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('mouseup', onMouseUp)
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('mouseup', onMouseUp)
+    }
+  }, [isDragging, onMouseMove, onMouseUp])
 
   // Navigate to specific project
   const goToProject = (index: number) => {
@@ -208,13 +259,25 @@ export default function ProjectsSection() {
     }
 
     if (targetCardIndex !== -1) {
+      // Temporarily stop auto-scroll
+      const wasAutoScrolling = !isHovered && !isDragging
+      if (wasAutoScrolling) {
+        stopAutoScroll()
+      }
+
       const targetScroll = targetCardIndex * cardTotalWidth
       container.scrollTo({
         left: targetScroll,
         behavior: 'smooth'
       })
-      // Update index after smooth scroll
-      setTimeout(() => updateCurrentIndex(), 500)
+
+      // Resume auto-scroll after smooth scroll completes
+      setTimeout(() => {
+        updateCurrentIndex()
+        if (wasAutoScrolling && !isHovered && !isDragging) {
+          startAutoScroll()
+        }
+      }, 500)
     }
   }
 
@@ -249,11 +312,12 @@ export default function ProjectsSection() {
         {/* Infinite Scroll Container */}
         <div
           ref={containerRef}
-          className="overflow-x-auto cursor-grab active:cursor-grabbing scrollbar-hide"
+          className="overflow-x-auto cursor-grab scrollbar-hide"
           style={{
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
-            WebkitOverflowScrolling: 'touch'
+            WebkitOverflowScrolling: 'touch',
+            cursor: 'grab'
           }}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => {
@@ -261,10 +325,8 @@ export default function ProjectsSection() {
             setIsDragging(false)
           }}
           onMouseDown={onMouseDown}
-          onMouseMove={onMouseMove}
-          onMouseUp={onMouseUp}
         >
-          <style jsx>{`
+          <style>{`
             div::-webkit-scrollbar {
               display: none;
             }
