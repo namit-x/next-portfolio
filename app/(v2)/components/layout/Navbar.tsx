@@ -160,23 +160,27 @@ const GooeyNav: React.FC<GooeyNavProps> = ({
   };
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, index: number) => {
-    e.preventDefault(); // Prevent default hash jumping which might cause issues
-    const href = items[index].href;
-    const element = e.currentTarget;
-    activateItem(index, element);
+    e.preventDefault() // Prevent default hash jumping which might cause issues
+
+    const item = items[index]
+    if (!item) return
+
+    const href = item.href
+    const element = e.currentTarget
+    activateItem(index, element)
 
     // Smooth scroll to section
-    const sectionId = getSectionIdFromHref(href);
+    const sectionId = getSectionIdFromHref(href)
     if (sectionId) {
-      const section = document.getElementById(sectionId);
+      const section = document.getElementById(sectionId)
       if (section) {
-        section.scrollIntoView({ behavior: "smooth" });
+        section.scrollIntoView({ behavior: 'smooth' })
       }
     }
 
     // Update URL without causing a jump
-    window.history.pushState({}, "", href);
-  };
+    window.history.pushState({}, '', href)
+  }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLAnchorElement>) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -249,30 +253,33 @@ const GooeyNav: React.FC<GooeyNavProps> = ({
           entry !== null
       );
 
-    if (sections.length === 0) return;
+    if (sections.length === 0) return
 
     const observer = new IntersectionObserver(
       (entries) => {
         const visibleEntries = entries
           .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)
 
-        if (visibleEntries.length === 0) return;
+        if (visibleEntries.length === 0) return
 
-        const mostVisible = visibleEntries[0].target as HTMLElement;
+        const mostVisibleEntry = visibleEntries[0]
+        if (!mostVisibleEntry) return
+
+        const mostVisible = mostVisibleEntry.target as HTMLElement
         const matchedSection = sections.find(
           ({ element }) => element === mostVisible
-        );
+        )
 
         if (matchedSection && matchedSection.index !== activeIndex) {
-          setActiveIndex(matchedSection.index);
+          setActiveIndex(matchedSection.index)
           // Update visual effect when scroll changes active item
-          const activeLink = navRef.current?.querySelectorAll("a")[matchedSection.index] as HTMLElement;
+          const activeLink = navRef.current?.querySelectorAll('a')[matchedSection.index] as HTMLElement
           if (activeLink && textRef.current) {
-            updateEffectPosition(activeLink);
-            textRef.current.classList.add("active");
+            updateEffectPosition(activeLink)
+            textRef.current.classList.add('active')
             if (filterRef.current) {
-              filterRef.current.classList.add("active");
+              filterRef.current.classList.add('active')
             }
           }
         }

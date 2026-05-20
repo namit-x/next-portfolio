@@ -244,6 +244,9 @@ export default function ProjectsSection() {
     const track = trackRef.current
     if (!container || !track) return
 
+    const project = FEATURED_PROJECTS[index]
+    if (!project) return
+
     const cardWidth = (track.children[0] as HTMLElement)?.offsetWidth || 0
     const gap = 24
     const cardTotalWidth = cardWidth + gap
@@ -253,7 +256,7 @@ export default function ProjectsSection() {
     for (let i = 0; i < track.children.length; i++) {
       const card = track.children[i] as HTMLElement
       const projectId = card.getAttribute('data-project-id')
-      if (projectId === FEATURED_PROJECTS[index].id) {
+      if (projectId === project.id) {
         targetCardIndex = i
         break
       }

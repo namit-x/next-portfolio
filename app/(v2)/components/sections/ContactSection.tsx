@@ -1,3 +1,5 @@
+'use client'
+
 import {
   ArrowUpRight,
   BriefcaseBusiness,
@@ -7,51 +9,59 @@ import {
   MapPin,
   Terminal,
 } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import CyanMorphButton from '../ui/CyanMorphButton'
-
-const CONTACT_DETAILS = [
-  {
-    label: 'Email',
-    value: 'rnamit099@gmail.com',
-    href: 'mailto:rnamit099@gmail.com',
-    icon: Mail,
-  },
-  {
-    label: 'Location',
-    value: 'Bengaluru, IN',
-    href: 'https://www.google.com/maps/search/?api=1&query=Bengaluru%2C%20IN',
-    icon: MapPin,
-  },
-]
-
-const SOCIAL_LINKS = [
-  {
-    label: 'GitHub',
-    handle: '@namit-x',
-    href: 'https://github.com/namit-x',
-    icon: Terminal,
-  },
-  {
-    label: 'LinkedIn',
-    handle: '/in/namitrana',
-    href: 'https://www.linkedin.com/in/namit-raana',
-    icon: BriefcaseBusiness,
-  },
-  {
-    label: 'Instagram',
-    handle: '@namit.raana',
-    href: 'https://www.instagram.com/namit.raana',
-    icon: Camera,
-  },
-  {
-    label: 'LeetCode',
-    handle: 'namitrana',
-    href: 'https://leetcode.com/u/namitrana',
-    icon: Code2,
-  },
-]
+import { ENCODED_EMAIL, decodeEmail } from '@/lib/email'
 
 export default function ContactSection() {
+  const [email, setEmail] = useState('')
+
+  useEffect(() => {
+    // Decode email on client side only to prevent bots from seeing it
+    setEmail(decodeEmail(ENCODED_EMAIL))
+  }, [])
+
+  const CONTACT_DETAILS = [
+    {
+      label: 'Email',
+      value: email || '...loading',
+      href: email ? `mailto:${email}` : 'javascript:void(0)',
+      icon: Mail,
+    },
+    {
+      label: 'Location',
+      value: 'Bengaluru, IN',
+      href: 'https://www.google.com/maps/search/?api=1&query=Bengaluru%2C%20IN',
+      icon: MapPin,
+    },
+  ]
+
+  const SOCIAL_LINKS = [
+    {
+      label: 'GitHub',
+      handle: '@namit-x',
+      href: 'https://github.com/namit-x',
+      icon: Terminal,
+    },
+    {
+      label: 'LinkedIn',
+      handle: '/in/namitrana',
+      href: 'https://www.linkedin.com/in/namit-raana',
+      icon: BriefcaseBusiness,
+    },
+    {
+      label: 'Instagram',
+      handle: '@namit.raana',
+      href: 'https://www.instagram.com/namit.raana',
+      icon: Camera,
+    },
+    {
+      label: 'LeetCode',
+      handle: 'namitrana',
+      href: 'https://leetcode.com/u/namitrana',
+      icon: Code2,
+    },
+  ]
   return (
     <section
       id="contact"
@@ -105,8 +115,8 @@ export default function ContactSection() {
             >
               <CyanMorphButton
                 text="Write an email"
-                href="mailto:rnamit099@gmail.com"
-                ariaLabel="Send an email to rnamit099@gmail.com"
+                href={email ? `mailto:${email}` : 'javascript:void(0)'}
+                ariaLabel={email ? `Send an email to ${email}` : 'Email will load shortly'}
               />
 
               <p className="max-w-sm font-mono text-xs sm:text-sm font-light leading-relaxed text-muted-foreground">

@@ -1,5 +1,5 @@
 const nextConfig = {
-  allowedDevOrigins: ['172.20.197.225'],
+  allowedDevOrigins: process.env.DEV_ORIGIN_IP ? [process.env.DEV_ORIGIN_IP] : [],
 }
 
 module.exports = nextConfig

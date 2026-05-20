@@ -45,8 +45,13 @@ type LeetCodeResponse = {
   }
 }
 
-const GITHUB_USERNAME = 'namit-x'
-const LEETCODE_USERNAME = 'namitrana'
+const GITHUB_USERNAME = process.env.GITHUB_USERNAME || 'namit-x'
+const LEETCODE_USERNAME = process.env.LEETCODE_USERNAME || 'namitrana'
+
+// Validate required environment variables on startup
+if (!process.env.GITHUB_USERNAME || !process.env.LEETCODE_USERNAME) {
+  console.warn('[Signal API] WARNING: GITHUB_USERNAME or LEETCODE_USERNAME not set in environment variables')
+}
 
 const DAY_MS = 24 * 60 * 60 * 1000
 const CALENDAR_WEEKS = 52
@@ -76,7 +81,7 @@ const formatEventType = (type: string) =>
     .replace(/([a-z])([A-Z])/g, '$1 $2')
     .toLowerCase()
 
-const levelFromCount = (count: number, thresholds = [1, 3, 6, 10]) => {
+const levelFromCount = (count: number, thresholds: [number, number, number, number] = [1, 3, 6, 10]) => {
   if (count <= 0) return 0
   if (count >= thresholds[3]) return 4
   if (count >= thresholds[2]) return 3
@@ -140,13 +145,12 @@ const fetchJson = async <T,>(url: string, init?: RequestInit): Promise<T> => {
     'user-agent': 'namit-portfolio-signal-grid',
   }
 
-  // Add GitHub token if available for authenticated requests (skip if placeholder)
-  if (
-    url.includes('api.github.com') &&
-    process.env.GITHUB_TOKEN &&
-    process.env.GITHUB_TOKEN !== 'your_github_token_here'
-  ) {
-    headers['authorization'] = `token ${process.env.GITHUB_TOKEN}`
+  // Add GitHub token if available for authenticated requests
+  if (url.includes('api.github.com') && process.env.GITHUB_TOKEN) {
+    // Better validation: just check if token exists and has some length
+    if (process.env.GITHUB_TOKEN.length > 10) {
+      headers['authorization'] = `token ${process.env.GITHUB_TOKEN}`
+    }
   }
 
   // Merge init headers if provided
@@ -156,12 +160,23 @@ const fetchJson = async <T,>(url: string, init?: RequestInit): Promise<T> => {
 
   const response = await fetch(url, {
     ...init,
-    cache: 'no-store',
     headers,
   })
 
   if (!response.ok) {
-    throw new Error(`${url} returned ${response.status}`)
+    // Extract rate limit info from headers if available
+    const rateLimitRemaining = response.headers.get('x-ratelimit-remaining')
+    const rateLimitReset = response.headers.get('x-ratelimit-reset')
+
+    const error = new Error(
+      `API Error: ${response.status} from ${url}` +
+      (rateLimitRemaining ? ` (Rate limit: ${rateLimitRemaining} remaining)` : '')
+    )
+      ; (error as any).statusCode = response.status
+      ; (error as any).isRateLimit = response.status === 403 || response.status === 429
+      ; (error as any).retryAfter = rateLimitReset
+
+    throw error
   }
 
   return response.json() as Promise<T>
@@ -335,7 +350,27 @@ export async function GET(request: Request) {
   try {
     const url = new URL(request.url)
     const fromDate = url.searchParams.get('from')
-    const [github, leetcode] = await Promise.all([getGitHubSignal(fromDate ?? undefined), getLeetCodeSignal(fromDate ?? undefined)])
+
+    // Validate fromDate parameter if provided
+    if (fromDate && !/^\d{4}-\d{2}-\d{2}$/.test(fromDate)) {
+      return Response.json(
+        {
+          error: 'Invalid fromDate format. Expected YYYY-MM-DD',
+        },
+        {
+          status: 400,
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+    }
+
+    const [github, leetcode] = await Promise.all([
+      getGitHubSignal(fromDate ?? undefined),
+      getLeetCodeSignal(fromDate ?? undefined),
+    ])
 
     return Response.json(
       {
@@ -345,27 +380,60 @@ export async function GET(request: Request) {
       },
       {
         headers: {
-          'Cache-Control': 'no-store',
+          // Cache for 5 minutes, allow stale content for up to 10 minutes if backend is down
+          'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+          'Content-Type': 'application/json',
         },
       }
     )
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unable to load signal data'
+    const statusCode = (error as any)?.statusCode || 500
+    const isRateLimit = (error as any)?.isRateLimit || errorMessage.includes('403') || errorMessage.includes('429')
 
-    // Log detailed error for debugging
-    console.error('[Signal API Error]:', errorMessage)
+    // Log error for monitoring (in production, send to error tracking service)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[Signal API Error]:', {
+        message: errorMessage,
+        statusCode,
+        isRateLimit,
+        timestamp: new Date().toISOString(),
+      })
+    }
 
-    // Check if it's a rate limit error
-    if (errorMessage.includes('returned 403')) {
-      console.error(
-        '[Rate Limit Help] GitHub API is rate-limited. To fix:\n' +
-        '1. Go to: https://github.com/settings/tokens?type=beta\n' +
-        '2. Click "Generate new token"\n' +
-        '3. Select "Personal Access Token (fine-grained)"\n' +
-        '4. Name: "next-portfolio-dev"\n' +
-        '5. Expiration: 90 days\n' +
-        '6. Repository access: Public repositories (read-only)\n' +
-        '7. Copy token and add to .env.local: GITHUB_TOKEN=ghp_xxx'
+    // Handle rate limiting with proper status code
+    if (isRateLimit) {
+      const retryAfter = (error as any)?.retryAfter
+      const headers: Record<string, string> = {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Content-Type': 'application/json',
+      }
+
+      if (retryAfter) {
+        headers['Retry-After'] = retryAfter
+      }
+
+      if (process.env.NODE_ENV === 'development') {
+        console.error(
+          '[Rate Limit Help] API is rate-limited. To fix:\n' +
+          '1. Go to: https://github.com/settings/tokens?type=beta\n' +
+          '2. Click "Generate new token"\n' +
+          '3. Select "Personal Access Token (fine-grained)"\n' +
+          '4. Name: "next-portfolio-dev"\n' +
+          '5. Expiration: 90 days\n' +
+          '6. Repository access: Public repositories (read-only)\n' +
+          '7. Copy token and add to .env.local: GITHUB_TOKEN=ghp_xxx'
+        )
+      }
+
+      return Response.json(
+        {
+          error: 'API rate limited. Please try again later.',
+        },
+        {
+          status: 429,
+          headers,
+        }
       )
     }
 
@@ -374,9 +442,10 @@ export async function GET(request: Request) {
         error: errorMessage,
       },
       {
-        status: 502,
+        status: statusCode >= 400 ? statusCode : 502,
         headers: {
-          'Cache-Control': 'no-store',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Content-Type': 'application/json',
         },
       }
     )

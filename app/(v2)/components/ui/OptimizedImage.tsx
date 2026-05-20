@@ -31,30 +31,56 @@ export function OptimizedImage({
     objectFit = 'cover',
 }: OptimizedImageProps) {
     const [isLoaded, setIsLoaded] = useState(false)
+    const [hasError, setHasError] = useState(false)
     const containerRef = useRef<HTMLDivElement>(null)
+    const observerRef = useRef<IntersectionObserver | null>(null)
 
     useEffect(() => {
-        // Preload images on intersection (lazy load)
-        const observer = new IntersectionObserver(
-            entries => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        setIsLoaded(true)
-                        observer.unobserve(entry.target)
-                    }
-                })
-            },
-            { rootMargin: '50px' }
-        )
-
-        if (containerRef.current && !priority && loading !== 'eager') {
-            observer.observe(containerRef.current)
-        } else {
+        // Skip observer if image should be eagerly loaded
+        if (priority || loading === 'eager') {
             setIsLoaded(true)
+            return
         }
 
-        return () => observer.disconnect()
-    }, [loading, priority])
+        // Create observer only once
+        if (!observerRef.current) {
+            observerRef.current = new IntersectionObserver(
+                entries => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            setIsLoaded(true)
+                            // Stop observing after image loads
+                            if (observerRef.current) {
+                                observerRef.current.unobserve(entry.target)
+                            }
+                        }
+                    })
+                },
+                { rootMargin: '50px' }
+            )
+        }
+
+        if (containerRef.current) {
+            observerRef.current.observe(containerRef.current)
+        }
+
+        // Proper cleanup
+        return () => {
+            if (observerRef.current && containerRef.current) {
+                observerRef.current.unobserve(containerRef.current)
+            }
+        }
+    }, [priority, loading])
+
+    // Cleanup observer when component unmounts
+    useEffect(() => {
+        return () => {
+            if (observerRef.current) {
+                observerRef.current.disconnect()
+                observerRef.current = null
+            }
+        }
+    }, [])
 
     return (
         <div
@@ -65,7 +91,15 @@ export function OptimizedImage({
                 background: 'hsl(var(--muted))',
             }}
         >
-            {isLoaded ? (
+            {hasError ? (
+                // Error state: show fallback UI
+                <div
+                    className="flex items-center justify-center w-full h-full bg-muted"
+                    title={`Failed to load: ${alt}`}
+                >
+                    <span className="text-xs text-muted-foreground">Image unavailable</span>
+                </div>
+            ) : isLoaded ? (
                 <Image
                     src={src}
                     alt={alt}
@@ -78,7 +112,10 @@ export function OptimizedImage({
                         objectPosition: 'center',
                     }}
                     onError={() => {
-                        console.warn(`Failed to load image: ${src}`)
+                        setHasError(true)
+                        if (process.env.NODE_ENV === 'development') {
+                            console.warn(`Failed to load image: ${src}`)
+                        }
                     }}
                 />
             ) : (

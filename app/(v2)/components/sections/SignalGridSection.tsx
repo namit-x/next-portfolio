@@ -290,7 +290,8 @@ function mergeCalendars(github: CalendarCell[], leetcode: CalendarCell[]): Calen
   let currentDate = new Date(startDate)
 
   while (currentDate <= today) {
-    const dateStr = currentDate.toISOString().split('T')[0]
+    const isoString = currentDate.toISOString()
+    const dateStr = (isoString.split('T')[0] || isoString.slice(0, 10)) as string
     const count = dateMap.get(dateStr) || 0
 
     merged.push({
@@ -464,6 +465,8 @@ export default function SignalGridSection() {
       const timeoutId = setTimeout(() => loadExtendedSignal(), 0)
       return () => clearTimeout(timeoutId)
     }
+    // Return undefined cleanup function if condition not met
+    return undefined
   }, [showUnified, extendedSignal, loadExtendedSignal])
 
   const github = signal?.github
